@@ -144,23 +144,12 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
 mode: Team
 name: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
-tools:
-  - run_in_terminal
-  - runSubagent
-  - manage_todo_list
-  - read_file
-  - file_search
-  - grep_search
-  - semantic_search
+tools: [agent/runSubagent, edit/createDirectory, edit/createFile, edit/createJupyterNotebook, edit/editFiles, edit/editNotebook, edit/rename, terminal/runCommand, search/doSearch, search/findFiles, search/doSemanticSearch, todo/manageTodoList, fetch/fetchUrl, read/readFile]
 ---
 
 # Team Coordinator
 
 You are the **coordinator** of the **${team.name}** development team. Your job is to analyze tasks, decompose them into subtasks, and delegate work to the right team members.
-
-## IMPORTANT — File Operations
-
-You do **NOT** have direct file-editing tools. To create, modify, or delete files, always use \`run_in_terminal\` with the appropriate command. For team management specifically, use the \`ll-agents-team\` CLI (see "Team Management" below). For other file operations, use standard shell commands (\`echo\`, \`cat\`, \`cp\`, etc.) or delegate the work to a sub-agent which will have full file-editing capabilities.
 
 ## Your Team
 ${agentList}
