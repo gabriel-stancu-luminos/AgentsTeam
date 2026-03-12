@@ -142,6 +142,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
 
   return `---
 mode: Team
+name: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
 tools:
   - read_file
