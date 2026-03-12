@@ -141,7 +141,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
       : '- _No boundary conflicts detected — all agents can run in parallel if tasks are independent_';
 
   return `---
-mode: team
+mode: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
 tools:
   - read_file
