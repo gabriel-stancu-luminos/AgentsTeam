@@ -50,6 +50,14 @@ export async function saveTeam(
 
 // ── Scaffold ─────────────────────────────────────────────────────────────────
 
+export function getGithubAgentsDir(root?: string): string {
+  return join(resolve(root ?? '.'), '.github', 'agents');
+}
+
+export function getCoordinatorPath(root?: string): string {
+  return join(getGithubAgentsDir(root), 'team.md');
+}
+
 export async function scaffoldTeamDir(root?: string): Promise<string> {
   const teamDir = getTeamDir(root);
 
@@ -61,6 +69,7 @@ export async function scaffoldTeamDir(root?: string): Promise<string> {
     join(teamDir, SHARED_DIR),
     join(teamDir, LOCKS_DIR),
     join(teamDir, LOG_DIR),
+    getGithubAgentsDir(root),
   ];
 
   for (const dir of dirs) {

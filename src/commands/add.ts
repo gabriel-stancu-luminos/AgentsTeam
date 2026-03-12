@@ -6,6 +6,7 @@ import {
   addAgentToTeam,
   teamExists,
   getTeamDir,
+  getCoordinatorPath,
 } from '../core/team.js';
 import { createAgentEntry, writeAgentFiles } from '../core/agent.js';
 import { addRoutingRule, generateDefaultRules, saveRouting, loadRouting } from '../core/router.js';
@@ -81,10 +82,7 @@ export async function addCommand(options: AddOptions): Promise<void> {
 
   // Regenerate coordinator prompt (now knows about the new agent)
   const coordinatorPrompt = generateCoordinatorPrompt(team);
-  await writeFile(
-    join(getTeamDir(), 'agents', 'coordinator.md'),
-    coordinatorPrompt,
-  );
+  await writeFile(getCoordinatorPath(), coordinatorPrompt);
   console.log('✓ Updated coordinator agent');
 
   // Regenerate Copilot instructions

@@ -27,6 +27,8 @@ export {
   addAgentToTeam,
   removeAgentFromTeam,
   getTeamDir,
+  getGithubAgentsDir,
+  getCoordinatorPath,
 } from './core/team.js';
 
 // Agent management

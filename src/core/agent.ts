@@ -83,25 +83,10 @@ ${boundariesList}
 `;
 }
 
-// ── Agent prompt file (for Copilot agent mode) ──────────────────────────────
+// ── Agent charter file (referenced by coordinator, not a Copilot agent) ──────
 
 export function generateAgentPrompt(agent: AgentEntry): string {
-  const expertiseStr = agent.expertise.join(', ');
-
-  return `---
-mode: ${agent.name.toLowerCase()}
-description: "${agent.role} — expertise in ${expertiseStr}"
-tools:
-  - read_file
-  - create_file
-  - replace_string_in_file
-  - run_in_terminal
-  - file_search
-  - grep_search
-  - semantic_search
----
-
-${generateCharter(agent)}`;
+  return generateCharter(agent);
 }
 
 // ── Persist agent files ──────────────────────────────────────────────────────

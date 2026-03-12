@@ -6,6 +6,7 @@ import {
   saveTeam,
   teamExists,
   getTeamDir,
+  getCoordinatorPath,
 } from '../core/team.js';
 import { saveRouting } from '../core/router.js';
 import { initSharedMemory } from '../core/memory.js';
@@ -38,13 +39,10 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   await initSharedMemory();
   console.log('✓ Created shared/decisions.md and shared/learnings.md');
 
-  // 5. Generate coordinator agent prompt
+  // 5. Generate coordinator agent prompt (visible in Copilot as "Team")
   const coordinatorPrompt = generateCoordinatorPrompt(team);
-  await writeFile(
-    join(getTeamDir(), 'agents', 'coordinator.md'),
-    coordinatorPrompt,
-  );
-  console.log('✓ Generated coordinator agent (agents/coordinator.md)');
+  await writeFile(getCoordinatorPath(), coordinatorPrompt);
+  console.log('✓ Generated coordinator agent (.github/agents/team.md)');
 
   // 6. Generate Copilot workspace instructions
   const copilotInstructions = generateCopilotInstructions(team);

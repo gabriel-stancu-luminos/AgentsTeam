@@ -141,7 +141,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
       : '- _No boundary conflicts detected — all agents can run in parallel if tasks are independent_';
 
   return `---
-mode: coordinator
+mode: team
 description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
 tools:
   - read_file
@@ -247,7 +247,7 @@ ${agentList || '- _No agents yet — run `ll-agents-team add` to add team member
 
 ### Coordinator
 The team coordinator decomposes tasks, delegates to specialists, and prevents conflicts.
-See \`.agents-team/agents/coordinator.md\` for the coordinator agent.
+See \`.github/agents/team.md\` for the coordinator agent — it appears as **Team** in the Copilot chat.
 
 ### Shared Knowledge
 - **Decisions:** \`.agents-team/shared/decisions.md\`

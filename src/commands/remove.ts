@@ -6,6 +6,7 @@ import {
   removeAgentFromTeam,
   teamExists,
   getTeamDir,
+  getCoordinatorPath,
 } from '../core/team.js';
 import { archiveAgent } from '../core/agent.js';
 import { removeRoutingRules } from '../core/router.js';
@@ -43,10 +44,7 @@ export async function removeCommand(name: string): Promise<void> {
 
   // Regenerate coordinator prompt
   const coordinatorPrompt = generateCoordinatorPrompt(team);
-  await writeFile(
-    join(getTeamDir(), 'agents', 'coordinator.md'),
-    coordinatorPrompt,
-  );
+  await writeFile(getCoordinatorPath(), coordinatorPrompt);
   console.log('✓ Updated coordinator agent');
 
   // Regenerate Copilot instructions
