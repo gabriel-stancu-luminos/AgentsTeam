@@ -1,0 +1,42 @@
+{
+  "name": "ll-agents-team",
+  "version": "0.1.0",
+  "description": "Lightweight AI agent team orchestration for any project — a coordinator that creates teams, delegates tasks in parallel, and prevents conflicts",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ll-agents-team": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "team",
+    "copilot",
+    "orchestration",
+    "coordinator",
+    "parallel",
+    "delegation"
+  ],
+  "license": "MIT"
+}
