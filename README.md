@@ -2,8 +2,6 @@
 
 **Lightweight AI agent team orchestration for any project.** One command. A coordinator that creates teams, delegates tasks in parallel, and prevents conflicts.
 
-Inspired by [Squad](https://github.com/bradygaster/squad) — but lighter. No SDK runtime, no interactive shell, no casting engine. Just clean team definitions, a smart coordinator, and conflict-safe parallel execution — all through VS Code Copilot.
-
 ---
 
 ## Quick Start
@@ -248,26 +246,6 @@ await appendAgentMemory({
 ```
 
 Rules are regex patterns matched against task descriptions, ordered by priority (highest first).
-
----
-
-## Comparison with Squad
-
-| Feature | Squad | ll-agents-team |
-|---------|-------|----------------|
-| Team management | CLI + SDK | CLI + SDK |
-| Coordinator agent | SDK runtime | Copilot agent (prompt-based) |
-| Parallel execution | Session-based | Boundary-checked |
-| Conflict prevention | Hook pipeline | File boundaries + locks |
-| Memory / learnings | History files | Individual + shared memory |
-| Decisions log | decisions.md | decisions.md |
-| Casting (themed names) | CastingEngine | Not included |
-| Interactive shell | Real-time TUI | Not included |
-| Ralph (monitor) | Persistent watcher | Not included |
-| Crash recovery | Session persistence | Not included |
-| Hook pipeline (PII, guards) | Programmable | Not included |
-| Plugin marketplace | Community plugins | Not included |
-| Dependencies | Node 20+, Copilot SDK | Node 20+, commander |
 
 ---
 
