@@ -43,6 +43,9 @@ You are responsible for and may modify files matching these patterns:
 - Scheduled import functions that call external APIs must handle rate limits and back-off gracefully
 
 ### After Completing
-1. Report results to the coordinator
-2. Note throughput numbers if you changed batch sizes or concurrency settings
-3. List any new environment settings (queue names, CRON schedules, API endpoints) needed across DEV / UAT / PROD
+1. **Update your private memory** — append new learnings about pipeline patterns, CSV handling, CRON scheduling, and export/import quirks to `.agents-team/memory/pe-pipeline-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if pipeline architecture or deployment decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note throughput numbers if you changed batch sizes or concurrency settings
+6. List any new environment settings (queue names, CRON schedules, API endpoints) needed across DEV / UAT / PROD

@@ -42,6 +42,9 @@ You are responsible for and may modify files matching these patterns:
 - If an existing doc is incorrect or outdated, update it and record what changed
 
 ### After Completing
-1. Report results to the coordinator
-2. List any areas of the codebase that still lack documentation
-3. Note any architectural decisions that should be formally recorded as ADRs
+1. **Update your private memory** — append new learnings, patterns, and documentation gaps discovered to `.agents-team/memory/doc-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if architectural or design decisions were made or documented, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. List any areas of the codebase that still lack documentation
+6. Note any architectural decisions that should be formally recorded as ADRs

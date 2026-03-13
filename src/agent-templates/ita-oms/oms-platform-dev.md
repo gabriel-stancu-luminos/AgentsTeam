@@ -43,6 +43,9 @@ You are responsible for and may modify files matching these patterns:
 - Fraud service changes should be tested against both "approved" and "declined" response scenarios
 
 ### After Completing
-1. Report results to the coordinator
-2. List all function apps affected by your Common library changes
-3. Note any new test utilities added and how they can be used by other agent test classes
+1. **Update your private memory** — append new learnings about Common library patterns, resilience policies, and test utilities to `.agents-team/memory/oms-platform-dev.md`
+2. **Update shared knowledge** — if your findings affect all agents (e.g., Common library changes), append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if platform-wide architectural decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. List all function apps affected by your Common library changes
+6. Note any new test utilities added and how they can be used by other agent test classes

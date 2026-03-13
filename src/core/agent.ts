@@ -78,9 +78,11 @@ ${boundariesList}
 - Record important discoveries and patterns as you go
 
 ### After Completing
-1. Report your results to the coordinator
-2. List any new learnings about the codebase, patterns, or conventions you discovered
-3. Note any follow-up work that might be needed by other agents
+1. **Update your private memory** — append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to \`.agents-team/shared/learnings.md\`
+3. **Record decisions** — if architectural or design decisions were made, append them to \`.agents-team/shared/decisions.md\`
+4. Report your results to the coordinator
+5. Note any follow-up work that might be needed by other agents
 `;
 }
 

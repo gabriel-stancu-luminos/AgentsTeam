@@ -49,6 +49,9 @@ You are responsible for and may modify files matching these patterns:
 - Note any cross-browser or device compatibility concerns
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any new UI patterns or component conventions you established
-3. Flag any API shape assumptions the frontend now depends on
+1. **Update your private memory** — append new learnings, UI patterns, and component conventions to `.agents-team/memory/frontend-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if UI/API contract decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any new UI patterns or component conventions you established
+6. Flag any API shape assumptions the frontend now depends on

@@ -45,6 +45,9 @@ You are responsible for and may modify files matching these patterns:
 - Scheduling configurations (CRON patterns) live in `appsettings.json` — keep them environment-overridable
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any pricing calculation edge cases or business rule constraints discovered
-3. Flag any model changes that affect the Administration portal controllers or Azure Function input/output bindings
+1. **Update your private memory** — append new learnings about pricing calculation patterns, business rules, EF/Dapper conventions, and edge cases to `.agents-team/memory/pe-core-dev.md`
+2. **Update shared knowledge** — if your findings affect other agents (e.g., model changes, new shared behaviors), append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if pricing strategy or architectural decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any pricing calculation edge cases or business rule constraints discovered
+6. Flag any model changes that affect the Administration portal controllers or Azure Function input/output bindings

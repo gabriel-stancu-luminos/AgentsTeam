@@ -44,6 +44,9 @@ You are responsible for and may modify files matching these patterns:
 - Swagger documentation must stay accurate; regenerate and review after controller changes
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any new role policies or permission boundaries introduced
-3. Flag any API contract changes that the Vue SPA now depends on
+1. **Update your private memory** — append new learnings about admin portal patterns, Azure AD integration, Vue conventions, and role policies to `.agents-team/memory/pe-admin-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if admin design, auth, or API contract decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any new role policies or permission boundaries introduced
+6. Flag any API contract changes that the Vue SPA now depends on

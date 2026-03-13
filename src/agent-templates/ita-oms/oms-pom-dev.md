@@ -42,6 +42,9 @@ You are responsible for and may modify files matching these patterns:
 - If proof document generation touches shared utilities, coordinate with the platform agent
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any PO lifecycle edge cases or Omnium OMS API constraints discovered
-3. List any new queues, blob containers, or table names that need provisioning in non-Development environments
+1. **Update your private memory** — append new learnings about PO lifecycle, Omnium API constraints, and CSV/blob patterns to `.agents-team/memory/oms-pom-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if PO workflow or integration decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any PO lifecycle edge cases or Omnium OMS API constraints discovered
+6. List any new queues, blob containers, or table names that need provisioning in non-Development environments

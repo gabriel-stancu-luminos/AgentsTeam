@@ -49,6 +49,8 @@ You are responsible for and may modify files matching these patterns:
 - If you're changing a public API contract, flag it — other agents or systems may depend on it
 
 ### After Completing
-1. Report results to the coordinator
-2. List new learnings about codebase patterns, conventions, or gotchas
-3. Note any follow-up work needed by other agents (e.g., frontend changes, migration scripts)
+1. **Update your private memory** — append new learnings, patterns, gotchas, and codebase observations to `.agents-team/memory/backend-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if architectural or design decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any follow-up work needed by other agents (e.g., frontend changes, migration scripts)

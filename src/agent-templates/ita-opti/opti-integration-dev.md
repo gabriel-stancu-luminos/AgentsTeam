@@ -43,6 +43,9 @@ You are responsible for and may modify files matching these patterns:
 - Never hardcode API base URLs or keys — read from `appsettings.json` / Key Vault
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any external API quirks, rate limits, or undocumented behaviors discovered
-3. Flag any feature layer changes needed to consume updated client interfaces
+1. **Update your private memory** — append new learnings about external API quirks, rate limits, resilience patterns, and client conventions to `.agents-team/memory/opti-integration-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if integration architecture or contract decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any external API quirks, rate limits, or undocumented behaviors discovered
+6. Flag any feature layer changes needed to consume updated client interfaces

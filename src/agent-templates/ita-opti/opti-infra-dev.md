@@ -45,6 +45,9 @@ You are responsible for and may modify files matching these patterns:
 - Performance-sensitive changes (caching, indexing) should include a note on expected impact
 
 ### After Completing
-1. Report results to the coordinator
-2. List any migration scripts that need to be run in non-Development environments
-3. Note any re-index or deployment steps required beyond a standard code deploy
+1. **Update your private memory** — append new learnings about migrations, middleware order, caching, and infrastructure patterns to `.agents-team/memory/opti-infra-dev.md`
+2. **Update shared knowledge** — if your findings affect other agents (e.g., schema changes, new caching keys), append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if infrastructure or deployment decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. List any migration scripts that need to be run in non-Development environments
+6. Note any re-index or deployment steps required beyond a standard code deploy

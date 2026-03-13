@@ -43,6 +43,9 @@ You are responsible for and may modify files matching these patterns:
 - If you modify a shared content type or market configuration, flag it — it may affect multiple features
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any Episerver-specific patterns or CMS quirks discovered
-3. Flag any changes that require a re-index of Episerver Find or a CMS deployment step
+1. **Update your private memory** — append new learnings about Episerver patterns, CMS quirks, and feature folder conventions to `.agents-team/memory/opti-feature-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if architectural or CMS/commerce decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any Episerver-specific patterns or CMS quirks discovered
+6. Flag any changes that require a re-index of Episerver Find or a CMS deployment step

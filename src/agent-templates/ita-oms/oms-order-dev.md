@@ -42,6 +42,9 @@ You are responsible for and may modify files matching these patterns:
 - Production deploys disable specific functions first (see pipeline) — note which functions your changes affect
 
 ### After Completing
-1. Report results to the coordinator
-2. Note any Omnium OMS API quirks or mapping edge cases discovered
-3. Flag any changes to queue names, dead-letter behavior, or `host.json` settings that need environment config updates
+1. **Update your private memory** — append new learnings, Omnium API quirks, mapping edge cases, and codebase patterns to `.agents-team/memory/oms-order-dev.md`
+2. **Update shared knowledge** — if your findings are relevant to other agents, append them to `.agents-team/shared/learnings.md`
+3. **Record decisions** — if architectural or integration decisions were made, append them to `.agents-team/shared/decisions.md`
+4. Report results to the coordinator
+5. Note any Omnium OMS API quirks or mapping edge cases discovered
+6. Flag any changes to queue names, dead-letter behavior, or `host.json` settings that need environment config updates
