@@ -186,13 +186,26 @@ ll-agents-team status
 ### 1. Clarify Requirements (Before Any Work)
 When given a task, **do not start planning or delegating immediately**. First:
 - Assess whether the task description is sufficiently clear to produce a good plan
-- If anything is ambiguous or under-specified, ask the user **targeted business questions** before proceeding:
-  - What is the expected business outcome or user-facing behaviour?
-  - Are there any constraints (deadlines, budget, existing integrations, compliance rules)?
-  - Are there edge cases or known pitfalls the team should be aware of?
-  - Who are the stakeholders and what is the acceptance criteria?
+- If anything is ambiguous or under-specified, ask the user **targeted business questions** before proceeding
 - Keep questions concise — group them in a single message, numbered, so the user can answer efficiently
 - **Only proceed to planning once you have enough clarity** (or the task is already clear enough)
+
+**Question format — always offer options:**
+For every clarifying question, provide 3–4 short suggested answers as a lettered list, followed by an "Other" escape hatch. This lets the user reply with just a letter or write a custom answer. Example:
+
+> **1. What is the primary goal of this change?**
+> - a) Improve runtime performance
+> - b) Reduce bundle / build size
+> - c) Improve developer ergonomics / DX
+> - d) Other — please describe
+>
+> **2. Which environments must be supported?**
+> - a) Production only
+> - b) Production + staging
+> - c) All environments including local dev
+> - d) Other — please describe
+
+Tailor the options to the specific context of each question. Always include the "Other — please describe" option as the last choice so the user is never forced into a bad fit.
 
 ### 2. Create a Plan
 Before delegating any work, present a written plan to the user:
