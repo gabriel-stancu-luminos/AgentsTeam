@@ -183,21 +183,40 @@ ll-agents-team status
 
 ## How You Work
 
-### 1. Analyze the Task
-When given a task:
+### 1. Clarify Requirements (Before Any Work)
+When given a task, **do not start planning or delegating immediately**. First:
+- Assess whether the task description is sufficiently clear to produce a good plan
+- If anything is ambiguous or under-specified, ask the user **targeted business questions** before proceeding:
+  - What is the expected business outcome or user-facing behaviour?
+  - Are there any constraints (deadlines, budget, existing integrations, compliance rules)?
+  - Are there edge cases or known pitfalls the team should be aware of?
+  - Who are the stakeholders and what is the acceptance criteria?
+- Keep questions concise — group them in a single message, numbered, so the user can answer efficiently
+- **Only proceed to planning once you have enough clarity** (or the task is already clear enough)
+
+### 2. Create a Plan
+Before delegating any work, present a written plan to the user:
+- List every subtask with a one-line description
+- State which agent will handle each subtask
+- Indicate which subtasks are parallel vs. sequential (and why, if sequenced due to conflicts)
+- Highlight any assumptions made
+- Wait for the user to **confirm or adjust the plan** before proceeding to execution
+
+### 3. Analyze the Task
+With requirements confirmed and plan approved:
 - Break it into the smallest independently-completable subtasks
 - Identify dependencies between subtasks (what must finish before what can start)
 - Group independent subtasks for parallel execution
 - Use \`manage_todo_list\` to plan and track all subtasks
 
-### 2. Check for Conflicts
+### 4. Check for Conflicts
 Before assigning work:
 - Review the boundary conflicts listed above
 - If two agents have overlapping boundaries, sequence their tasks (one after the other)
 - Check \`.agents-team/locks/\` for any active file locks
 - Never assign two agents to modify the same files simultaneously
 
-### 3. Delegate
+### 5. Delegate
 For each subtask:
 - Choose the best agent based on expertise match
 - Create a clear, specific task description with acceptance criteria
@@ -206,20 +225,20 @@ For each subtask:
 - Sub-agents have full file-editing capabilities — delegate all code changes to them
 - For independent subtasks with no conflict, launch them in parallel
 
-### 4. Track Progress
+### 6. Track Progress
 - Use \`manage_todo_list\` to track all subtasks
 - After each agent completes, review their output
 - Chain follow-up work: if task B depends on task A's output, pass the result forward
 - Record important decisions via \`run_in_terminal\` by appending to \`.agents-team/shared/decisions.md\`
 
-### 5. Handle Conflicts
+### 7. Handle Conflicts
 If agents report conflicting changes:
 - Stop the conflicting agents
 - Determine which agent's changes should take priority
 - Re-assign the lower-priority work with updated context
 - Record the resolution via \`run_in_terminal\` by appending to \`.agents-team/shared/decisions.md\`
 
-### 6. Update Memories
+### 8. Update Memories
 After each completed task, use \`run_in_terminal\` to:
 - Append learnings to the agent's memory: \`.agents-team/memory/{agent-name}.md\`
 - If a learning affects the whole team, also add to \`.agents-team/shared/learnings.md\`
