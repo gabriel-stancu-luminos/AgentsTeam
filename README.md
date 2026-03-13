@@ -23,6 +23,20 @@ This creates `.agents-team/` with the coordinator, shared memory files, and Copi
 
 ### 3. Add agents
 
+**From a pre-built template** (recommended — full role, expertise, boundaries and working protocol included):
+
+```bash
+# List all available templates
+ll-agents-team templates
+
+# Add from template — no --role or --expertise needed
+ll-agents-team add --name "BackendDev"      --template generic/backend-dev
+ll-agents-team add --name "OptiFeatureDev" --template ita-opti/opti-feature-dev
+ll-agents-team add --name "PECoreDev"      --template ita-pricing-engine/pe-core-dev
+```
+
+**Manually** (full control over every field):
+
 ```bash
 ll-agents-team add \
   --name "Frontend" \
@@ -35,12 +49,12 @@ ll-agents-team add \
   --role "Backend Developer" \
   --expertise "Node.js,PostgreSQL,REST APIs,authentication" \
   --boundaries "src/backend/**:write,src/api/**:exclusive"
+```
 
-ll-agents-team add \
-  --name "Tester" \
-  --role "QA Engineer" \
-  --expertise "testing,Jest,Playwright,test automation" \
-  --boundaries "tests/**:write,e2e/**:write"
+**Mix template + override** — template provides the base, CLI args take precedence:
+
+```bash
+ll-agents-team add --name "BackendDev" --template generic/backend-dev --role "Senior Backend Dev"
 ```
 
 ### 4. Use in Copilot
@@ -54,11 +68,12 @@ Build the login page with email/password authentication
 ```
 
 The coordinator will:
-1. Decompose the task into subtasks
-2. Assign each subtask to the right agent
-3. Run independent subtasks in parallel
-4. Sequence dependent or conflicting subtasks
-5. Track progress and record decisions
+1. **Ask clarifying business questions** if the task is ambiguous (outcome, constraints, edge cases, acceptance criteria)
+2. **Present a written plan** (subtasks, assigned agents, parallel vs. sequential) and wait for your approval
+3. Decompose confirmed subtasks and assign them to agents
+4. Run independent subtasks in parallel
+5. Sequence dependent or conflicting subtasks
+6. Track progress and record decisions
 
 ---
 
@@ -67,7 +82,9 @@ The coordinator will:
 | Command | What it does |
 |---------|-------------|
 | `ll-agents-team init` | Scaffold `.agents-team/` in the current project |
-| `ll-agents-team add` | Add an agent with name, role, expertise, boundaries |
+| `ll-agents-team add` | Add an agent with name, role, expertise, and boundaries |
+| `ll-agents-team add --template <key>` | Add an agent from a pre-built template |
+| `ll-agents-team templates` | List all available agent templates |
 | `ll-agents-team remove <name>` | Remove an agent (charter preserved in `_alumni/`) |
 | `ll-agents-team list` | List all team members and boundary conflicts |
 | `ll-agents-team status` | Show team status, locks, routing rules, memory entries |
@@ -78,13 +95,15 @@ The coordinator will:
 
 ### The Coordinator
 
-The coordinator is a Copilot agent defined in `.agents-team/agents/coordinator.md`. When you give it a task, it:
+The coordinator is a Copilot agent (`.github/agents/team.md`, visible as **@Team** in Copilot Chat). When you give it a task, it:
 
-1. **Analyzes** — breaks the task into subtasks
-2. **Routes** — matches subtasks to agents by expertise and routing rules
-3. **Checks conflicts** — ensures agents with overlapping file boundaries don't run simultaneously
-4. **Delegates** — launches independent subtasks in parallel, sequences dependent ones
-5. **Tracks** — records decisions and learnings in shared memory
+1. **Clarifies** — asks targeted business questions if the task is ambiguous (outcome, constraints, edge cases, acceptance criteria)
+2. **Plans** — presents a written plan (subtasks, owners, parallel vs. sequential) and waits for your confirmation before proceeding
+3. **Analyzes** — breaks confirmed subtasks into the smallest independently-completable units
+4. **Routes** — matches subtasks to agents by expertise and routing rules
+5. **Checks conflicts** — ensures agents with overlapping file boundaries don't run simultaneously
+6. **Delegates** — launches independent subtasks in parallel, sequences dependent ones
+7. **Tracks** — records decisions and learnings in shared memory
 
 ### Conflict Prevention
 
@@ -156,6 +175,83 @@ Default routing rules are generated when you add an agent. You can edit `routing
 ```
 
 **Commit this folder.** Your team persists across sessions. Anyone who clones the repo gets the same team with all their accumulated knowledge.
+
+---
+
+## Agent Templates
+
+Templates are pre-built agent charters bundled with the package. They include a full role description, expertise list, file boundaries, coding standards, and a working protocol — saving you from typing all that on the CLI.
+
+### List available templates
+
+```bash
+ll-agents-team templates
+```
+
+```
+📋 Available agent templates:
+
+  generic/
+    backend-dev
+      ll-agents-team add --name "MyAgent" --template generic/backend-dev
+    frontend-dev
+      ll-agents-team add --name "MyAgent" --template generic/frontend-dev
+    doc-dev
+      ll-agents-team add --name "MyAgent" --template generic/doc-dev
+  ita-opti/
+    opti-feature-dev
+    opti-infra-dev
+    opti-integration-dev
+  ita-pricing-engine/
+    pe-core-dev
+    pe-admin-dev
+    pe-pipeline-dev
+  ita-oms/
+    oms-order-dev
+    oms-platform-dev
+    oms-pom-dev
+```
+
+### How templates work
+
+When you use `--template`, the CLI:
+1. Reads the template `.md` file from the package
+2. Parses out the role, expertise list, and file boundaries
+3. Renames the title and memory-path references to match your `--name`
+4. Writes the full template content as the agent's charter (`.agents-team/agents/{name}.md`)
+5. Adds the agent to `team.json` and regenerates `team.md`
+
+Any explicitly passed `--role`, `--expertise`, or `--boundaries` override the template values.
+
+### Adding your own templates
+
+Add `.md` files under `src/agent-templates/{category}/` in the `ll-agents-team` package, following this structure:
+
+```markdown
+# template-name — Role Title
+
+## Role
+One-paragraph description of what this agent does.
+
+## Expertise
+- Technology / skill 1
+- Technology / skill 2
+
+## File Boundaries
+You are responsible for and may modify files matching these patterns:
+- `src/path/**` (write)
+- `tests/**` (read)
+
+## Working Protocol
+...
+```
+
+Rebuild and reinstall the package after adding templates:
+
+```bash
+npm run build
+npm install -g .
+```
 
 ---
 

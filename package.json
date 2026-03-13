@@ -25,6 +25,7 @@
   },
   "files": [
     "dist",
+    "src/agent-templates",
     "README.md",
     "LICENSE"
   ],

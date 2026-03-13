@@ -1,6 +1,7 @@
-import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   type AgentEntry,
   type FileBoundary,
@@ -89,16 +90,119 @@ export function generateAgentPrompt(agent: AgentEntry): string {
   return generateCharter(agent);
 }
 
+// ── Template discovery & parsing ─────────────────────────────────────────────
+
+export function getTemplatesDir(): string {
+  return fileURLToPath(new URL('../../src/agent-templates', import.meta.url));
+}
+
+export interface TemplateInfo {
+  key: string;      // e.g. "generic/backend-dev"
+  category: string; // e.g. "generic"
+  name: string;     // e.g. "backend-dev"
+  path: string;     // absolute path
+}
+
+export interface ParsedTemplate {
+  role: string;
+  expertise: string[];
+  boundaries: FileBoundary[];
+  charter: string;
+}
+
+export async function listTemplates(): Promise<TemplateInfo[]> {
+  const templatesDir = getTemplatesDir();
+  const templates: TemplateInfo[] = [];
+  try {
+    const categories = await readdir(templatesDir, { withFileTypes: true });
+    for (const cat of categories) {
+      if (!cat.isDirectory()) continue;
+      const files = await readdir(join(templatesDir, cat.name));
+      for (const file of files) {
+        if (!file.endsWith('.md')) continue;
+        const name = file.replace(/\.md$/, '');
+        templates.push({
+          key: `${cat.name}/${name}`,
+          category: cat.name,
+          name,
+          path: join(templatesDir, cat.name, file),
+        });
+      }
+    }
+  } catch {
+    // templates dir not found — silently return empty
+  }
+  return templates;
+}
+
+export function parseTemplateContent(content: string, agentName: string): ParsedTemplate {
+  const lines = content.split('\n');
+  let role = '';
+  let inSection = '';
+  const expertise: string[] = [];
+  const boundaries: FileBoundary[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('## ')) {
+      inSection = trimmed.slice(3).toLowerCase();
+      continue;
+    }
+    if (inSection === 'role' && trimmed && !role) {
+      role = trimmed;
+    }
+    if (inSection === 'expertise' && trimmed.startsWith('- ')) {
+      expertise.push(trimmed.slice(2).trim());
+    }
+    if (inSection === 'file boundaries' && trimmed.startsWith('- `')) {
+      const match = trimmed.match(/^- `([^`]+)`\s+\((\w+)\)/);
+      if (match) {
+        boundaries.push({
+          pattern: match[1],
+          access: (['read', 'write', 'exclusive'].includes(match[2])
+            ? match[2] : 'write') as FileBoundary['access'],
+        });
+      }
+    }
+  }
+
+  // Fallback: extract role from title line "# template-name — Role Description"
+  if (!role && lines[0]) {
+    const titleMatch = lines[0].match(/^# [^\s—]+\s+—\s+(.+)$/);
+    if (titleMatch) role = titleMatch[1].trim();
+  }
+
+  // Replace title and all memory-path references
+  const newTitle = `# ${agentName} — ${role}`;
+  const charter = [newTitle, ...lines.slice(1)]
+    .join('\n')
+    .replace(/\.agents-team\/memory\/[^.\s]+\.md/g, `.agents-team/memory/${agentName}.md`);
+
+  return { role, expertise, boundaries, charter };
+}
+
+export async function resolveTemplate(
+  key: string,
+): Promise<{ content: string; path: string } | null> {
+  const templates = await listTemplates();
+  // Exact key match first (e.g. "generic/backend-dev"), then name-only fallback
+  const found = templates.find((t) => t.key === key) ?? templates.find((t) => t.name === key);
+  if (!found) return null;
+  const content = await readFile(found.path, 'utf-8');
+  return { content, path: found.path };
+}
+
 // ── Persist agent files ──────────────────────────────────────────────────────
 
 export async function writeAgentFiles(
   agent: AgentEntry,
   root?: string,
+  charterContent?: string,
 ): Promise<void> {
   const charterPath = getCharterPath(agent.name, root);
   const memoryPath = getMemoryPath(agent.name, root);
 
-  await writeFile(charterPath, generateAgentPrompt(agent));
+  await writeFile(charterPath, charterContent ?? generateAgentPrompt(agent));
 
   if (!existsSync(memoryPath)) {
     await writeFile(

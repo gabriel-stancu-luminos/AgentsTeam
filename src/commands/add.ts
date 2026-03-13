@@ -8,16 +8,17 @@ import {
   getTeamDir,
   getCoordinatorPath,
 } from '../core/team.js';
-import { createAgentEntry, writeAgentFiles } from '../core/agent.js';
+import { createAgentEntry, writeAgentFiles, resolveTemplate, parseTemplateContent, listTemplates } from '../core/agent.js';
 import { addRoutingRule, generateDefaultRules, saveRouting, loadRouting } from '../core/router.js';
 import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
 import type { FileBoundary } from '../core/types.js';
 
 interface AddOptions {
   name: string;
-  role: string;
-  expertise: string;
+  role?: string;
+  expertise?: string;
   boundaries?: string;
+  template?: string;
 }
 
 export async function addCommand(options: AddOptions): Promise<void> {
@@ -26,7 +27,39 @@ export async function addCommand(options: AddOptions): Promise<void> {
     process.exit(1);
   }
 
-  const { name, role, expertise, boundaries: boundariesStr } = options;
+  const { name, role: roleOpt, expertise: expertiseOpt, template: templateKey } = options;
+  let boundariesStr = options.boundaries;
+
+  let charterContent: string | undefined;
+  let role = roleOpt ?? '';
+  let expertise = expertiseOpt ?? '';
+
+  // Resolve template if provided
+  if (templateKey) {
+    const tpl = await resolveTemplate(templateKey);
+    if (!tpl) {
+      const available = await listTemplates();
+      console.error(`✗ Template "${templateKey}" not found.`);
+      if (available.length > 0) {
+        console.error(`  Available: ${available.map((t) => t.key).join(', ')}`);
+      }
+      process.exit(1);
+    }
+    const parsed = parseTemplateContent(tpl.content, name);
+    charterContent = parsed.charter;
+    // Template values are defaults; explicit CLI args take precedence
+    if (!role) role = parsed.role;
+    if (!expertise) expertise = parsed.expertise.join(',');
+    if (!boundariesStr && parsed.boundaries.length > 0) {
+      boundariesStr = parsed.boundaries.map((b) => `${b.pattern}:${b.access}`).join(',');
+    }
+    console.log(`✔ Using template: ${tpl.path}`);
+  }
+
+  if (!role) {
+    console.error('✗ --role is required when not using a template.');
+    process.exit(1);
+  }
 
   // Parse expertise (comma-separated)
   const expertiseList = expertise
@@ -35,7 +68,7 @@ export async function addCommand(options: AddOptions): Promise<void> {
     .filter(Boolean);
 
   if (expertiseList.length === 0) {
-    console.error('✗ At least one expertise area is required.');
+    console.error('✗ At least one expertise area is required (provide --expertise or use a template).');
     process.exit(1);
   }
 
@@ -69,7 +102,7 @@ export async function addCommand(options: AddOptions): Promise<void> {
   await saveTeam(team);
 
   // Write charter + memory files
-  await writeAgentFiles(agent);
+  await writeAgentFiles(agent, undefined, charterContent);
   console.log(`✓ Created agent charter: agents/${name}.md`);
 
   // Add default routing rules

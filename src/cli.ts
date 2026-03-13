@@ -6,6 +6,7 @@ import { addCommand } from './commands/add.js';
 import { removeCommand } from './commands/remove.js';
 import { listCommand } from './commands/list.js';
 import { statusCommand } from './commands/status.js';
+import { listTemplatesCommand } from './commands/templates.js';
 
 const program = new Command();
 
@@ -24,8 +25,8 @@ program
   .command('add')
   .description('Add an agent to the team')
   .requiredOption('--name <name>', 'Agent name')
-  .requiredOption('--role <role>', 'Agent role (e.g., "Frontend Developer")')
-  .requiredOption(
+  .option('--role <role>', 'Agent role (e.g., "Frontend Developer")')
+  .option(
     '--expertise <items>',
     'Comma-separated expertise areas (e.g., "React,CSS,TypeScript")',
   )
@@ -33,7 +34,16 @@ program
     '--boundaries <patterns>',
     'Comma-separated file boundary patterns with access (e.g., "src/frontend/**:write,src/styles/**:exclusive")',
   )
+  .option(
+    '--template <key>',
+    'Use a pre-built template (e.g., "generic/backend-dev", "ita-opti/opti-feature-dev"). Run "ll-agents-team templates" to list all options.',
+  )
   .action(addCommand);
+
+program
+  .command('templates')
+  .description('List all available agent templates')
+  .action(listTemplatesCommand);
 
 program
   .command('remove <name>')
