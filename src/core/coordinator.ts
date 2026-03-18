@@ -142,7 +142,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
 
   // Build the agent charter paths for delegation instructions
   const agentCharterPaths = team.agents
-    .map((a) => `  - **${a.name}**: \`.agents-team/agents/${a.name}.md\``)
+    .map((a) => `  - **${a.name}** → \`agentName: ".agents-team/agents/${a.name}.md"\``)
     .join('\n');
 
   return `---
@@ -177,7 +177,8 @@ Your only permitted direct actions are: reading files (for context), searching t
 ## Your Team
 ${agentList}
 
-## Agent Charter Paths (for runSubagent)
+## Agent Charter Paths — use as \`agentName\` in runSubagent
+**Copy these exact values into the \`agentName\` parameter when calling \`runSubagent\`. This is what gives each sub-agent its file editing and terminal tools.**
 ${agentCharterPaths || '  - _No agents yet — run `ll-agents-team add` to create team members_'}
 
 ## Known Boundary Conflicts
@@ -209,7 +210,7 @@ ll-agents-team status
 
 ---
 
-# Phase 1: Project Initialization
+# Step 1: Project Initialization
 
 Before any planning or delegation, establish full situational awareness.
 
@@ -232,11 +233,11 @@ When given a task, **do not start planning or delegating immediately**. First:
 - **Always use \`vscode_askQuestions\`** — never write questions as plain markdown text
 - For every question, supply an \`options\` array with 3–4 short, context-specific choices. Always add \`"Other — please describe"\` as the final option, and set \`allowFreeformInput: true\`
 - Group all questions into a **single \`vscode_askQuestions\` call** — do not ask one question at a time
-- **Only proceed to Phase 2 once you have enough clarity** (or the task is already clear enough)
+- **Only proceed to Step 2 once you have enough clarity** (or the task is already clear enough)
 
 ---
 
-# Phase 2: Sub-Agent Task Setup
+# Step 2: Sub-Agent Task Setup
 
 Design atomic, specific sub-agent assignments. Each sub-agent task must be self-contained and clearly scoped.
 
@@ -255,7 +256,7 @@ Present the plan to the user before proceeding:
 - Highlight assumptions and risks
 - Use **\`vscode_askQuestions\`** to ask the user to confirm. Provide options: "Looks good, proceed", "I want to adjust something" (with \`allowFreeformInput: true\`)
 
-> **⛔ STOP HERE.** Do NOT proceed to Phase 3 until the user explicitly approves the plan.
+> **⛔ STOP HERE.** Do NOT proceed to Step 3 until the user explicitly approves the plan.
 
 ### 2.3 Check for Conflicts
 Before finalizing assignments:
@@ -274,7 +275,7 @@ For each subtask, compose a detailed delegation prompt that includes:
 
 ---
 
-# Phase 3: Task Coordination & Execution
+# Step 3: Task Coordination & Execution
 
 ### 3.1 Initialize Tracking
 - Use \`manage_todo_list\` to create entries for ALL subtasks before starting any work
@@ -283,13 +284,20 @@ For each subtask, compose a detailed delegation prompt that includes:
 ### 3.2 Delegate via runSubagent
 > **REMINDER: Every subtask MUST be delegated via \`runSubagent\`. You write ZERO code.**
 
-For each subtask:
-- Use \`runSubagent\` to launch the assigned agent
-- **Set the \`description\` parameter to \`"{AgentName}: {3-5 word task summary}"\`** — e.g. \`"Backend Engineer: Add login endpoint"\` or \`"Frontend Dev: Update dashboard UI"\` — so the user sees \`Subagent: Backend Engineer: ...\` in the chat. **NEVER use "Phase X" or generic labels — always use the agent's name.**
-- In the prompt, always include:
-  - The agent's charter path: \`.agents-team/agents/{name}.md\`
+For each subtask, call \`runSubagent\` with **all three parameters**:
+
+| Parameter | Value |
+|---|---|
+| \`agentName\` | The agent's charter path — **MUST be set** — e.g. \`.agents-team/agents/Backend Engineer.md\`. This loads the agent's tools (file editing, terminal, search). If omitted, the sub-agent will have NO tools. |
+| \`description\` | \`"{AgentName}: {3-5 word task summary}"\` — e.g. \`"Backend Engineer: Add login endpoint"\`. **NEVER use "Step X" or generic labels — always the agent's name.** |
+| \`prompt\` | Full task description (see below) |
+
+**\`agentName\` is the most critical parameter.** It MUST be the relative path to the agent's \`.md\` charter file. Without it, the sub-agent launches without any tools and cannot edit files or run commands.
+
+The prompt must always include:
   - The full task description and acceptance criteria
   - The **mandatory memory update instructions** (copy verbatim from Section 3.5)
+
 - For independent subtasks with no conflicts, launch them in parallel (up to ${team.coordinator.maxParallelTasks} concurrent)
 - Mark each subtask as \`in-progress\` in the todo list when its agent starts
 
@@ -350,8 +358,8 @@ After ALL subtasks are completed, generate a **Task Execution Metrics Report** a
   ┌─────────────────────────────────────────────────────┐
   │ PER-AGENT BREAKDOWN                                 │
   ├─────────────────────────────────────────────────────┤
-  │ Agent: {name}                                       │
-  │   Tasks: {list of task descriptions}                │
+  │ Agent: {configured agent name, e.g. "Backend Engineer"} │
+  │   Tasks: {what this agent actually did}             │
   │   Files modified: {list of files}                   │
   │   Memory updated: ✅ / ❌                          │
   │   Shared memory updated: ✅ / ❌                   │
