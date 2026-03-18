@@ -285,7 +285,7 @@ For each subtask, compose a detailed delegation prompt that includes:
 
 For each subtask:
 - Use \`runSubagent\` to launch the assigned agent
-- **Set the \`description\` parameter to \`"{AgentName}: {3-5 word task summary}"\`** — e.g. \`"Alice: Add login endpoint"\` — so the user sees the agent's name in the chat instead of a generic label
+- **Set the \`description\` parameter to \`"{AgentName}: {3-5 word task summary}"\`** — e.g. \`"Backend Engineer: Add login endpoint"\` or \`"Frontend Dev: Update dashboard UI"\` — so the user sees \`Subagent: Backend Engineer: ...\` in the chat. **NEVER use "Phase X" or generic labels — always use the agent's name.**
 - In the prompt, always include:
   - The agent's charter path: \`.agents-team/agents/{name}.md\`
   - The full task description and acceptance criteria
@@ -353,8 +353,8 @@ After ALL subtasks are completed, generate a **Task Execution Metrics Report** a
   │ Agent: {name}                                       │
   │   Tasks: {list of task descriptions}                │
   │   Files modified: {list of files}                   │
-  │   Memory updated: ✅ / ❌                           │
-  │   Shared memory updated: ✅ / ❌                    │
+  │   Memory updated: ✅ / ❌                          │
+  │   Shared memory updated: ✅ / ❌                   │
   │   Status: completed / failed / retried              │
   │                                                     │
   │ Agent: {name}                                       │
