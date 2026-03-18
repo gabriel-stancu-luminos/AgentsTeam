@@ -285,6 +285,7 @@ For each subtask, compose a detailed delegation prompt that includes:
 
 For each subtask:
 - Use \`runSubagent\` to launch the assigned agent
+- **Set the \`description\` parameter to \`"{AgentName}: {3-5 word task summary}"\`** — e.g. \`"Alice: Add login endpoint"\` — so the user sees the agent's name in the chat instead of a generic label
 - In the prompt, always include:
   - The agent's charter path: \`.agents-team/agents/{name}.md\`
   - The full task description and acceptance criteria

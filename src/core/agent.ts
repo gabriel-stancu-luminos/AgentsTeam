@@ -53,7 +53,13 @@ export function generateCharter(agent: AgentEntry): string {
         .join('\n')
     : '- _No boundaries defined — coordinate with the team coordinator_';
 
-  return `# ${agent.name} — ${agent.role}
+  return `---
+mode: agent
+description: "${agent.name} — ${agent.role}"
+tools: [terminal/runCommand, read/readFile, edit/replaceString, edit/insertString, edit/createFile, edit/deleteFile, search/doSearch, search/findFiles, search/doSemanticSearch, todo/manageTodoList]
+---
+
+# ${agent.name} — ${agent.role}
 
 ## Expertise
 ${expertiseList}
@@ -80,15 +86,15 @@ ${boundariesList}
 ### ⛔ After Completing — MANDATORY (Do NOT skip)
 Your task is **NOT complete** until ALL of the following are done. The coordinator will reject your work if any step is missing.
 
-1. **Update your private memory** — Use \`run_in_terminal\` to append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\`. Include:
+1. **Update your private memory** — Append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\` using your file editing tools (or \`run_in_terminal\` as fallback). Include:
    - What you learned about the codebase
    - Patterns or conventions you discovered
    - Gotchas or pitfalls encountered
    - Any context that would help you (or another agent) next time
 
-2. **Update shared learnings** — If ANY of your findings would help other team members, use \`run_in_terminal\` to append them to \`.agents-team/shared/learnings.md\`
+2. **Update shared learnings** — If ANY of your findings would help other team members, append them to \`.agents-team/shared/learnings.md\` using your file editing tools (or \`run_in_terminal\` as fallback).
 
-3. **Record decisions** — If you made ANY architectural, design, or implementation decisions, use \`run_in_terminal\` to append them to \`.agents-team/shared/decisions.md\` using this format:
+3. **Record decisions** — If you made ANY architectural, design, or implementation decisions, append them to \`.agents-team/shared/decisions.md\` using this format:
    \`\`\`
    ## [Date] Decision Title
    **By:** ${agent.name}
