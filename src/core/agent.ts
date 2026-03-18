@@ -77,12 +77,35 @@ ${boundariesList}
 - If you're blocked by another agent's work, report back immediately — don't wait
 - Record important discoveries and patterns as you go
 
-### After Completing
-1. **Update your private memory** — append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\`
-2. **Update shared knowledge** — if your findings are relevant to other agents, append them to \`.agents-team/shared/learnings.md\`
-3. **Record decisions** — if architectural or design decisions were made, append them to \`.agents-team/shared/decisions.md\`
-4. Report your results to the coordinator
-5. Note any follow-up work that might be needed by other agents
+### ⛔ After Completing — MANDATORY (Do NOT skip)
+Your task is **NOT complete** until ALL of the following are done. The coordinator will reject your work if any step is missing.
+
+1. **Update your private memory** — Use \`run_in_terminal\` to append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\`. Include:
+   - What you learned about the codebase
+   - Patterns or conventions you discovered
+   - Gotchas or pitfalls encountered
+   - Any context that would help you (or another agent) next time
+
+2. **Update shared learnings** — If ANY of your findings would help other team members, use \`run_in_terminal\` to append them to \`.agents-team/shared/learnings.md\`
+
+3. **Record decisions** — If you made ANY architectural, design, or implementation decisions, use \`run_in_terminal\` to append them to \`.agents-team/shared/decisions.md\` using this format:
+   \`\`\`
+   ## [Date] Decision Title
+   **By:** ${agent.name}
+   **Context:** Why this decision was needed
+   **Decision:** What was decided
+   **Affects:** Which areas / agents
+   \`\`\`
+
+4. **Report results** to the coordinator with a summary of what was done
+
+5. **End your response with this completion signal:**
+   \`\`\`
+   ✅ MEMORY UPDATED: [list every .md file you updated]
+   \`\`\`
+   If you did NOT update any memory files, you MUST go back and do it now before reporting.
+
+6. Note any follow-up work that might be needed by other agents
 `;
 }
 

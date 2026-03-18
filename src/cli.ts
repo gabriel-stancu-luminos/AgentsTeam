@@ -7,6 +7,7 @@ import { removeCommand } from './commands/remove.js';
 import { listCommand } from './commands/list.js';
 import { statusCommand } from './commands/status.js';
 import { listTemplatesCommand } from './commands/templates.js';
+import { regenerateCommand } from './commands/regenerate.js';
 
 const program = new Command();
 
@@ -59,5 +60,12 @@ program
   .command('status')
   .description('Show team status, locks, and routing')
   .action(statusCommand);
+
+program
+  .command('regenerate')
+  .description('Regenerate coordinator and agent charters from the latest templates')
+  .option('--agents-only', 'Only regenerate agent charters')
+  .option('--coordinator-only', 'Only regenerate the coordinator and Copilot instructions')
+  .action(regenerateCommand);
 
 program.parse();
