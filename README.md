@@ -19,13 +19,13 @@ cd my-project
 ll-agents-team init --name "My App Team"
 ```
 
-### 3. Design your team with the coach
+### 3. Set up your team
 
 ```bash
 ll-agents-team coach
 ```
 
-Open Copilot Chat and select **Team Setup Coach**. It scans the entire workspace, reads your source code, understands the business domain and tech stack, then proposes a set of specific, non-overlapping agents tailored to your project. Review and approve — agents are created automatically.
+Then open Copilot Chat, select the **Team** agent, and say **"set up the team"**. The coordinator will scan your workspace, read your source code, understand the business domain and tech stack, and propose specific non-overlapping agents tailored to your project. Review and approve — agents are created automatically.
 
 **Or add agents manually:**
 
@@ -156,14 +156,14 @@ Follow-up: Register HeroBanner in Storybook (optional)
 | Command | What it does |
 |---------|-------------|
 | `ll-agents-team init` | Scaffold `.agents-team/` in the current project |
-| `ll-agents-team coach` | Create the Team Setup Coach — scans workspace and designs agents from your code |
+| `ll-agents-team coach` | Regenerate the Team coordinator with latest team state, ready for Team Setup Mode |
 | `ll-agents-team add` | Add an agent with name, role, expertise, and boundaries |
 | `ll-agents-team add --template <key>` | Add an agent from a pre-built template |
 | `ll-agents-team templates` | List all available agent templates |
 | `ll-agents-team remove <name>` | Remove an agent (charter preserved in `_alumni/`) |
 | `ll-agents-team list` | List all team members and boundary conflicts |
 | `ll-agents-team status` | Show team status, locks, routing rules, memory entries |
-| `ll-agents-team regenerate` | Regenerate all coordinator, coach, and agent charter files |
+| `ll-agents-team regenerate` | Regenerate the coordinator and all agent charter files |
 
 ---
 
@@ -181,9 +181,9 @@ The coordinator is a Copilot agent (`.github/agents/team.md`, visible as **Team*
 6. **Validates** — checks memory was updated after each sub-agent completes
 7. **Reports** — produces a metrics report at the end
 
-### The Coach
+### Team Setup Mode (built into the Team coordinator)
 
-The coach is a separate Copilot agent (`.github/agents/team-coach.agent.md`). It:
+When you say **"set up the team"** to the Team coordinator, it enters Team Setup Mode. It:
 
 1. **Reads all source files** in each bounded context — not just folder names
 2. **Reads dependency files** — extracts actual library names for expertise
@@ -191,7 +191,9 @@ The coach is a separate Copilot agent (`.github/agents/team-coach.agent.md`). It
 4. **Detects gaps** — flags folders with no agent owner
 5. **Validates** after creation with `ll-agents-team status`
 
-Run `ll-agents-team coach` again whenever you add a major feature area or after significant refactors.
+There is only one agent file: `.github/agents/team.md`. It handles both team setup and task execution.
+
+Run `ll-agents-team coach` after adding a major feature area or significant refactor — it regenerates the coordinator with the latest team state before you start a new setup session.
 
 ### Conflict Prevention
 
@@ -251,8 +253,7 @@ Available: `generic/backend-dev`, `generic/frontend-dev`, `generic/doc-dev`, `it
 └── locks/                        # Active file locks (ephemeral)
 
 .github/agents/
-├── team.md                       # Coordinator agent (visible as "Team" in Copilot)
-└── team-coach.agent.md           # Coach agent (visible as "Team Setup Coach")
+└── team.md                       # Single Team agent (coordinator + Team Setup Mode)
 ```
 
 ---

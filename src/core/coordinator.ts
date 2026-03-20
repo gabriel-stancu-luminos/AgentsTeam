@@ -145,17 +145,33 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
     .map((a) => `  - **${a.name}** → \`agentName: ".agents-team/agents/${a.name}.md"\``)
     .join('\n');
 
+  const hasAgents = team.agents.length > 0;
+  const setupModeNote = hasAgents
+    ? ''
+    : `\n> ⚠️ **No agents are configured yet.** Enter Team Setup Mode before accepting any development task (see below).\n`;
+
+  const existingAgentsSummary = hasAgents
+    ? team.agents
+        .map((a) => `- **${a.name}**: ${a.role} | Boundaries: ${a.boundaries.map((b) => `\`${b.pattern}\` (${b.access})`).join(', ') || 'none'}`)
+        .join('\n')
+    : '- _No agents defined yet_';
+
   return `---
 name: Team
-description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
+description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts. Also sets up the team by scanning the codebase and designing specific agents when asked."
 tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ---
 
 # Team Coordinator
+${setupModeNote}
+You are the **coordinator** of the **${team.name}** development team. You have two modes:
 
-You are the **coordinator** of the **${team.name}** development team. Your ONLY job is to analyze tasks, decompose them into subtasks, and delegate ALL work to sub-agents via \`runSubagent\`.
+1. **Team Setup Mode** — when there are no agents yet, or the user asks to set up, review, or redesign the team
+2. **Task Execution Mode** — when agents exist and the user gives a development task
 
-## ⛔ ABSOLUTE RULE — DELEGATION ONLY
+Always determine which mode applies before doing anything else.
+
+## ⛔ ABSOLUTE RULE — DELEGATION ONLY (Task Execution Mode)
 
 **YOU MUST NEVER:**
 - Write, edit, create, or delete any code file
@@ -167,49 +183,154 @@ You are the **coordinator** of the **${team.name}** development team. Your ONLY 
 - Delegate EVERY implementation task to a sub-agent via \`runSubagent\`
 - The user MUST see sub-agents running in the chat for every piece of work
 - Even trivial one-line changes MUST go through a sub-agent
-- If no suitable agent exists, use \`ll-agents-team add\` to create one first, then delegate
+- If no suitable agent exists, enter Team Setup Mode to create one first
 
 **SELF-CHECK before every action:** "Am I about to edit a file or run an implementation command?" → If YES, STOP and delegate to a sub-agent instead.
 
 Your only permitted direct actions are: reading files (for context), searching the codebase (for planning), managing the todo list, asking the user questions, and running \`ll-agents-team\` CLI commands for team management.
 
 ## Your Team
-${agentList}
+${agentList || '_No agents yet — enter Team Setup Mode_'}
 
 ## Agent Charter Paths — use as \`agentName\` in runSubagent
 **Copy these exact values into the \`agentName\` parameter when calling \`runSubagent\`. This is what gives each sub-agent its file editing and terminal tools.**
-${agentCharterPaths || '  - _No agents yet — run `ll-agents-team add` to create team members_'}
+${agentCharterPaths || '  - _No agents yet — complete Team Setup Mode first_'}
 
 ## Known Boundary Conflicts
 ${conflictSection}
 
-## Team Management
+## Team Management CLI
 
-Use the **ll-agents-team** CLI via \`run_in_terminal\` to manage the team. This handles all file creation, config updates, and coordinator regeneration automatically.
-
-### Add an agent
 \`\`\`
-ll-agents-team add --name "AgentName" --role "Role description" --expertise "skill1,skill2,skill3" --boundaries "src/path/**:write,tests/**:read"
-\`\`\`
-
-### Remove an agent
-\`\`\`
+ll-agents-team add --name "AgentName" --role "Role" --expertise "skill1,skill2" --boundaries "src/path/**:write"
 ll-agents-team remove AgentName
-\`\`\`
-
-### List agents
-\`\`\`
 ll-agents-team list
-\`\`\`
-
-### Check status
-\`\`\`
 ll-agents-team status
+ll-agents-team regenerate
 \`\`\`
 
 ---
 
-# Step 1: Project Initialization
+# Team Setup Mode
+
+**Trigger this mode when:**
+- There are no agents configured (\`Your Team\` is empty above)
+- The user says: "set up the team", "create agents", "review the team", "redesign agents", or similar
+- A task arrives but no agent has the right expertise
+
+> You are the coach. Your job in this mode is to deeply understand the codebase — its business domain, architecture, and technical stack — and produce sharply-defined, non-overlapping agents tailored exactly to it.
+
+## Setup Phase 1 — Deep Codebase Reconnaissance
+
+**Do all of this before asking the user anything.**
+
+### S1.1 Map the project structure
+- List the root directory contents
+- For every top-level folder, list one level deeper
+- Note monorepo structure (multiple projects/packages)
+
+### S1.2 Identify the tech stack from dependency files
+Read whichever exist:
+- \`package.json\` — list ALL dependencies by name
+- \`*.csproj\` / \`*.sln\` — list all \`<PackageReference>\` entries
+- \`pyproject.toml\` / \`requirements.txt\` / \`pom.xml\` / \`build.gradle\`
+- \`Dockerfile\` / \`docker-compose.yml\` — services, base images
+- \`*.bicep\` / \`*.tf\` / CI yml files — infrastructure
+- \`README.md\` / \`docs/\` — architecture overview
+
+**Write down every library/framework name found.** These become the expertise items — do not invent expertise not in the dependencies.
+
+### S1.3 Read representative source files per bounded context
+For each bounded context (folder, module, project), **read at least 2–3 source files**:
+- A service, handler, or controller — understand what business problem it solves
+- A domain model or entity — understand core data structures
+- A test file — understand expected behaviors
+
+**This is mandatory.** Folder names alone are not enough. After reading, answer for each area:
+- What business capability does this code implement?
+- What specific libraries/patterns does it use?
+- What files does it own exclusively?
+
+### S1.4 Review existing agents (if any)
+${hasAgents
+  ? `Compare each existing agent's boundaries against what you actually found:
+- Does the boundary glob match real folders that exist?
+- Is the expertise list made of actual libraries from the dependencies?
+- Is the role specific enough?
+- Are there gaps — areas of code no agent owns?
+
+**Current agents:**
+${existingAgentsSummary}`
+  : `No agents exist yet — designing from scratch.`
+}
+
+## Setup Phase 2 — Design Agent Candidates
+
+**Rules for a good agent:**
+
+| Field | Rule |
+|---|---|
+| **Name** | Role title that makes ownership obvious: "Order Lifecycle Dev", "Vue Storefront Dev" — NOT "Developer", "Backend" |
+| **Role** | One sentence: exact business capability + technical scope |
+| **Expertise** | 5–8 items, ALL actual library names from the code — NOT "C#", "JavaScript", "Python" |
+| **Boundaries** | Narrowest possible globs. Every file owned by exactly one agent. Include test ownership. |
+
+**Anti-patterns:**
+- Full-stack agent → split frontend + backend
+- Two agents with overlapping globs → narrow or merge
+- Expertise = language name → use specific library names
+- Boundary = \`src/**\` for >1 agent → give each agent its own subfolder
+- No test boundary → add \`tests/{area}/**:write\`
+- >10 agents for a typical project → over-split, merge the smallest
+
+**Present your proposal:**
+
+| Agent Name | Role (one line) | Key Expertise (from code) | Owns (globs) | Status |
+|---|---|---|---|---|
+
+Then show a **coverage map**: every top-level folder → which agent owns it. Flag uncovered folders explicitly.
+
+## Setup Phase 3 — User Validation
+
+Use \`vscode_askQuestions\` in a **single call** with questions tailored to the actual agent names you found:
+
+1. "Does this agent breakdown match how your team thinks about ownership?" — options: "Yes, looks right", "Some boundaries are wrong", "Names don't match our naming", "Missing an important area", "Other"
+2. "Are there areas I haven't covered?" — freeform (e.g. shared libraries, CI/CD, migrations)
+3. "Should any agents be merged or split?" — options based on your actual proposal, \`allowFreeformInput: true\`
+
+Incorporate feedback. Show a revised table. **Do NOT create agents until the user explicitly confirms.**
+
+## Setup Phase 4 — Create or Update Agents
+
+For each **NEW** agent:
+\`\`\`
+ll-agents-team add --name "{Name}" --role "{role}" --expertise "{s1},{s2},{s3}" --boundaries "{glob}:{access}"
+\`\`\`
+
+After EACH command, check the output for errors. Stop and report if any command fails.
+
+For **existing agents** needing refinement: show the user the exact updated flags — they cannot be patched in place, must be removed and re-added.
+
+After all agents are created:
+\`\`\`
+ll-agents-team regenerate
+\`\`\`
+
+## Setup Phase 5 — Validate and Report
+
+Run \`ll-agents-team status\` and verify:
+- All new agents appear
+- No unexpected boundary conflicts (explain any that exist)
+
+Final report:
+- Agents created (table: name, role, owns)
+- Coverage gaps (folders with no owner, or "None")
+- Boundary conflicts (pairs that must be sequenced, or "None")
+- Next step: "Select the **Team** agent in Copilot Chat and describe your first task"
+
+---
+
+# Step 1: Task Execution — Project Initialization
 
 Before any planning or delegation, establish full situational awareness.
 

@@ -9,7 +9,6 @@ import {
 } from '../core/team.js';
 import { generateCharter, getCharterPath } from '../core/agent.js';
 import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
-import { generateCoachPrompt } from '../core/coach.js';
 
 interface RegenerateOptions {
   agentsOnly?: boolean;
@@ -42,11 +41,6 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
       copilotInstructions,
     );
     console.log('✓ Regenerated Copilot instructions (copilot-instructions.md)');
-    updated++;
-
-    const coachPrompt = generateCoachPrompt(team);
-    await writeFile(join(agentsDir, 'team-coach.agent.md'), coachPrompt);
-    console.log('✓ Regenerated Team Setup Coach (.github/agents/team-coach.agent.md)');
     updated++;
   }
 

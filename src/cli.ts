@@ -71,7 +71,7 @@ program
 
 program
   .command('coach')
-  .description('Create or update the Team Setup Coach agent — scans the workspace and designs specific agents')
+  .description('Regenerate the Team coordinator with latest team state, ready for Team Setup Mode')
   .action(coachCommand);
 
 program.parse();

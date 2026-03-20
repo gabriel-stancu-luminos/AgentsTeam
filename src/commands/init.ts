@@ -59,9 +59,8 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   console.log('');
   console.log('  ll-agents-team coach');
   console.log('');
-  console.log('This creates a Team Setup Coach agent that scans your workspace and');
-  console.log('designs specific, well-bounded agents for your project.');
-  console.log('Open Copilot Chat and select "Team Setup Coach" from the agent picker.');
+  console.log('Then open Copilot Chat, select the Team agent, and say "set up the team".');
+  console.log('The coordinator will scan your workspace and design specific agents for your project.');
   console.log('');
   console.log('Or add agents manually:');
   console.log('  ll-agents-team add --name "Frontend" --role "Frontend Developer" --expertise "React,CSS,TypeScript"');
