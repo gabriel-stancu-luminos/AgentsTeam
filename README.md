@@ -25,7 +25,13 @@ ll-agents-team init --name "My App Team"
 ll-agents-team coach
 ```
 
-Then open Copilot Chat, select the **Team** agent, and say **"set up the team"**. The coordinator will scan your workspace, read your source code, understand the business domain and tech stack, and propose specific non-overlapping agents tailored to your project. Review and approve — agents are created automatically.
+Then open Copilot Chat, select the **Team** agent, and say **"set up the team"**. The coordinator will:
+- Read 4–6 source files per bounded context (entry points, controllers, services, domain models, repos, tests, config)
+- Scan compiled/built output (`dist/`, `bin/`, `out/`, `.next/`, `target/`) — reads `.d.ts` declaration files, `.js.map` source maps, and `.dll`/`.jar` artifact names to discover module boundaries
+- Extract real library names from dependency files for expertise fields
+- Propose specific non-overlapping agents named after actual classes and business capabilities found in the code
+
+Review and approve — agents are created automatically.
 
 **Or add agents manually:**
 
@@ -185,11 +191,13 @@ The coordinator is a Copilot agent (`.github/agents/team.md`, visible as **Team*
 
 When you say **"set up the team"** to the Team coordinator, it enters Team Setup Mode. It:
 
-1. **Reads all source files** in each bounded context — not just folder names
-2. **Reads dependency files** — extracts actual library names for expertise
-3. **Proposes agents** with specific roles, library-accurate expertise, and tight boundaries
-4. **Detects gaps** — flags folders with no agent owner
-5. **Validates** after creation with `ll-agents-team status`
+1. **Reads 4–6 source files per bounded context** — entry points, controllers, services, domain models, repos, tests, and config; records exact class names, library imports, and business capabilities
+2. **Scans compiled/built output** — lists `dist/`, `bin/`, `out/`, `.next/`, `target/`, `publish/`; reads `.d.ts` declaration files (full API surface), `.js.map` source maps (module layout), and `.dll`/`.jar` artifact names to discover assembly/package boundaries without needing every source file
+3. **Reads dependency files** — extracts exact npm/NuGet/PyPI/Maven package names for expertise fields (never language names)
+4. **Proposes agents** named after actual class/service names found in code, with tight per-folder boundaries derived from real file paths
+5. **Shows a build output map** — every compiled artifact mapped to its owning agent
+6. **Detects gaps** — flags folders and build artifacts with no agent owner
+7. **Validates** after creation with `ll-agents-team status`
 
 There is only one agent file: `.github/agents/team.md`. It handles both team setup and task execution.
 

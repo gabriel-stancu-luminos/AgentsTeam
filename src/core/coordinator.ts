@@ -241,23 +241,50 @@ Read whichever exist:
 **Write down every library/framework name found.** These become the expertise items — do not invent expertise not in the dependencies.
 
 ### S1.3 Read representative source files per bounded context
-For each bounded context (folder, module, project), **read at least 2–3 source files**:
-- A service, handler, or controller — understand what business problem it solves
-- A domain model or entity — understand core data structures
-- A test file — understand expected behaviors
+For each bounded context (folder, module, project), **read at least 4–6 source files** — folder names alone are never enough:
 
-**This is mandatory.** Folder names alone are not enough. After reading, answer for each area:
-- What business capability does this code implement?
-- What specific libraries/patterns does it use?
-- What files does it own exclusively?
+**What to read:**
+- Entry points: \`index.ts\`, \`main.ts\`, \`app.ts\`, \`server.ts\`, \`Program.cs\`, \`startup.cs\`
+- Controllers / handlers / resolvers — every route or command handler (read them all if ≤10 files; at least 3 otherwise)
+- Services / use-cases — the business logic layer; note exact class names, method signatures, injected dependencies
+- Domain models / entities / DTOs — understand the core data structures and relationships
+- Repository / data-access layer — what ORM, query patterns, database interactions are used
+- Test files (\`*.spec.ts\`, \`*.test.ts\`, \`*_test.go\`, \`*Test.java\`) — understand expected behaviors and domain language
+- Configuration files (\`appsettings.json\`, \`config.ts\`, \`env.ts\`, \`.env.example\`) — understand environment splits
 
-### S1.4 Review existing agents (if any)
+**For every file read, explicitly note:**
+1. The exact class / function / module names (not just the file name)
+2. The exact library imports used (package names, not language names)
+3. The business capability: what real-world operation does this code perform?
+4. The data it reads and writes: which tables, queues, external APIs, file paths?
+5. Files it exclusively owns vs. files it shares with other modules
+
+**Discovering sub-domains inside large folders:**
+- If a folder has >5 subdirectories, treat each subdirectory as a potential separate bounded context
+- Look for a \`domain/\`, \`modules/\`, \`features/\`, or \`bounded-contexts/\` folder — each child is a separate agent candidate
+- Look at barrel files (\`index.ts\`, \`index.js\`) — they reveal the public API surface of a module
+
+### S1.4 Scan compiled and built output
+
+**Look for build output directories before designing agents:**
+- List the contents of: \`dist/\`, \`build/\`, \`out/\`, \`bin/\`, \`obj/\`, \`.output/\`, \`.next/\`, \`target/\`, \`publish/\`
+- If any exist:
+  - Read TypeScript declaration files (\`dist/**/*.d.ts\`) — they reveal the full public API surface without reading every source file
+  - Read source-map files (\`dist/**/*.js.map\`) — they contain the original source paths and tell you what modules compiled into what outputs
+  - Read compiled entry-point JS files (\`dist/index.js\`, \`dist/main.js\`) to understand module layout
+  - If build output exists but source does NOT (vendor/third-party code), read the \`.d.ts\` files to understand the API you are calling
+- For .NET projects: list \`.dll\` files in \`bin/\` — their names reveal the assembly boundaries and which projects compile independently
+- For Java/Kotlin: list \`.jar\` files — the jar name maps to a bounded context or microservice
+- **Record every module, package, or assembly name found** — these become candidate agent boundaries
+
+### S1.6 Review existing agents (if any)
 ${hasAgents
   ? `Compare each existing agent's boundaries against what you actually found:
 - Does the boundary glob match real folders that exist?
 - Is the expertise list made of actual libraries from the dependencies?
 - Is the role specific enough?
 - Are there gaps — areas of code no agent owns?
+- Did the build scan (S1.4) reveal modules not covered by any agent?
 
 **Current agents:**
 ${existingAgentsSummary}`
@@ -275,12 +302,21 @@ ${existingAgentsSummary}`
 | **Expertise** | 5–8 items, ALL actual library names from the code — NOT "C#", "JavaScript", "Python" |
 | **Boundaries** | Narrowest possible globs. Every file owned by exactly one agent. Include test ownership. |
 
+**Specificity requirements — you MUST follow these:**
+- **Derive agent names from the actual class/module names you read**, not from folder names. If services are named \`OrderFulfillmentService\`, \`OrderPaymentService\`, \`OrderShippingService\`, these are signals — not just "Order Service".
+- **Expertise items must be exact npm/NuGet/PyPI/Maven package names** from the dependency files (e.g. \`express\`, \`typeorm\`, \`zod\`, \`@azure/service-bus\`) — never language names
+- **Boundaries must be derived from actual file paths you read**, not guessed. If you read \`src/orders/fulfillment/\`, use \`src/orders/fulfillment/**\` not \`src/orders/**\`
+- **If build output exists (from S1.4)**, each compiled assembly/package/jar that maps to a separate deployable becomes a separate agent candidate
+
+- **One agent per deployable service** if the project is a monorepo with multiple services — never merge microservices into one agent
+
 **Anti-patterns:**
 - Full-stack agent → split frontend + backend
 - Two agents with overlapping globs → narrow or merge
 - Expertise = language name → use specific library names
 - Boundary = \`src/**\` for >1 agent → give each agent its own subfolder
 - No test boundary → add \`tests/{area}/**:write\`
+- Agent name matches a folder name exactly → name should reflect the business capability, not just the folder
 - >10 agents for a typical project → over-split, merge the smallest
 
 **Present your proposal:**
@@ -289,6 +325,11 @@ ${existingAgentsSummary}`
 |---|---|---|---|---|
 
 Then show a **coverage map**: every top-level folder → which agent owns it. Flag uncovered folders explicitly.
+
+**Also show a build output map** (if S1.4 found compiled artifacts):
+
+| Compiled artifact | Source folder | Owning agent |
+|---|---|---|
 
 ## Setup Phase 3 — User Validation
 
