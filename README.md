@@ -1,6 +1,259 @@
 # ll-agents-team
 
-**Lightweight AI agent team orchestration for any project.** One command. A coordinator that creates teams, delegates tasks in parallel, and prevents conflicts.
+**Lightweight AI agent team orchestration for any project.** One command sets up a coordinator that decomposes tasks, delegates to specialist agents in parallel, and prevents file conflicts.
+
+---
+
+## Quick Start
+
+### 1. Install
+
+```bash
+npm install -g ll-agents-team
+```
+
+### 2. Initialize in your project
+
+```bash
+cd my-project
+ll-agents-team init --name "My App Team"
+```
+
+### 3. Design your team with the coach
+
+```bash
+ll-agents-team coach
+```
+
+Open Copilot Chat and select **Team Setup Coach**. It scans the entire workspace, reads your source code, understands the business domain and tech stack, then proposes a set of specific, non-overlapping agents tailored to your project. Review and approve — agents are created automatically.
+
+**Or add agents manually:**
+
+```bash
+ll-agents-team add --name "Storefront Dev" \
+  --role "Implements Vue storefront components, blocks, and Pinia stores" \
+  --expertise "Vue 3 Composition API,Pinia,TypeScript,SCSS modules,Vite" \
+  --boundaries "src/storefront/**:write,tests/storefront/**:write"
+
+ll-agents-team add --name "Backend API Dev" \
+  --role "Implements REST endpoints, MediatR handlers, and EF Core repositories" \
+  --expertise "ASP.NET Core,MediatR,FluentValidation,Entity Framework Core,xUnit" \
+  --boundaries "src/Api/**:write,src/Domain/**:write,tests/Api/**:write"
+```
+
+### 4. Give a task to the coordinator
+
+Open Copilot Chat, select the **Team** agent, and describe what you need:
+
+```
+I need to create a new Hero Banner block in the storefront
+```
+
+The coordinator will do the rest.
+
+---
+
+## Real Example — "I need to create a new Hero Banner block in the storefront"
+
+Here is exactly what happens step by step when you send this task to the **Team** coordinator.
+
+### Step 1 — Coordinator reads context
+
+Before planning anything, the coordinator reads:
+- `.agents-team/shared/learnings.md` — finds a note: *"storefront blocks live in `src/storefront/blocks/`, each block has an `index.vue`, a `types.ts`, and is registered in `src/storefront/blocks/registry.ts`"*
+- `.agents-team/shared/decisions.md` — finds: *"blocks use Pinia for local state, not props drilling"*
+- `.agents-team/memory/Storefront Dev.md` — finds: *"block registry auto-discovers via Vite glob import, no manual registration needed"*
+- Runs `ll-agents-team status` — no active locks, no conflicts
+
+### Step 2 — Coordinator asks a clarifying question
+
+Because "Hero Banner" is not fully specified, it asks a single `vscode_askQuestions` call:
+
+> **What content does the Hero Banner block need?**
+> - Image + headline + CTA button
+> - Image + headline only
+> - Configurable via CMS fields
+> - Other — please describe
+
+You answer: *"Image + headline + CTA button, configurable via CMS fields"*
+
+### Step 3 — Coordinator presents the plan
+
+```
+📋 Execution Plan — Hero Banner Block
+
+Subtask 1 — Storefront Dev (parallel)
+  Create src/storefront/blocks/HeroBanner/index.vue
+  Create src/storefront/blocks/HeroBanner/types.ts
+  Fields: image (url+alt), headline (string), ctaLabel (string), ctaUrl (string)
+  CMS binding via existing useCmsField() composable
+  Acceptance: block renders, props are typed, CMS fields are wired
+
+Subtask 2 — Backend API Dev (parallel)
+  Expose HeroBanner block schema in the CMS content model API
+  Add DTO + mapper for the new block type
+  Acceptance: GET /api/content returns HeroBanner fields correctly
+
+Subtask 3 — Storefront Dev (sequential, after Subtask 2)
+  Integration test: block fetches and renders live CMS data
+  Acceptance: Cypress test passes with mock CMS response
+
+Parallel: Subtasks 1 + 2 run simultaneously.
+Sequential: Subtask 3 waits for both.
+```
+
+You confirm: *"Looks good, proceed"*
+
+### Step 4 — Coordinator delegates in parallel
+
+It launches two sub-agents simultaneously:
+
+**Subagent: Storefront Dev — Create HeroBanner block**
+- Creates `src/storefront/blocks/HeroBanner/index.vue` with Vue 3 `<script setup>`, typed props, CMS binding
+- Creates `src/storefront/blocks/HeroBanner/types.ts` with `HeroBannerBlock` interface
+- Writes unit test in `tests/storefront/blocks/HeroBanner.spec.ts`
+- Updates memory: *"HeroBanner uses useCmsField() composable, image field needs alt fallback"*
+- Ends with: `✅ MEMORY UPDATED: .agents-team/memory/Storefront Dev.md`
+
+**Subagent: Backend API Dev — Add HeroBanner CMS schema**
+- Adds `HeroBannerBlockDto.cs` in `src/Api/Cms/Blocks/`
+- Adds mapper entry in `CmsBlockMapper.cs`
+- Adds unit test in `tests/Api/Cms/HeroBannerBlockMapperTests.cs`
+- Updates memory: *"CMS block DTOs live in src/Api/Cms/Blocks/, one file per block type"*
+- Ends with: `✅ MEMORY UPDATED: .agents-team/memory/Backend API Dev.md`
+
+### Step 5 — Coordinator validates, then delegates the integration task
+
+After both complete, coordinator:
+1. Verifies memory files were updated ✅
+2. Marks Subtasks 1 & 2 as completed in the todo list
+3. Launches **Subagent: Storefront Dev — Integration test for HeroBanner**
+   - Adds `tests/storefront/blocks/HeroBanner.integration.spec.ts`
+   - Uses mock CMS response matching the DTO schema from Subtask 2
+
+### Step 6 — Metrics report
+
+```
+📊 TASK EXECUTION METRICS REPORT
+Task: Create Hero Banner block in storefront
+
+Total sub-agents invoked:  2
+Total subtasks completed:  3
+Parallel executions:       1 (Subtasks 1 + 2)
+Sequential executions:     1 (Subtask 3)
+
+Storefront Dev   — 2 tasks | 4 files | Memory ✅ | Status: completed
+Backend API Dev  — 1 task  | 3 files | Memory ✅ | Status: completed
+
+Boundary conflicts: None
+Follow-up: Register HeroBanner in Storybook (optional)
+```
+
+---
+
+## Commands
+
+| Command | What it does |
+|---------|-------------|
+| `ll-agents-team init` | Scaffold `.agents-team/` in the current project |
+| `ll-agents-team coach` | Create the Team Setup Coach — scans workspace and designs agents from your code |
+| `ll-agents-team add` | Add an agent with name, role, expertise, and boundaries |
+| `ll-agents-team add --template <key>` | Add an agent from a pre-built template |
+| `ll-agents-team templates` | List all available agent templates |
+| `ll-agents-team remove <name>` | Remove an agent (charter preserved in `_alumni/`) |
+| `ll-agents-team list` | List all team members and boundary conflicts |
+| `ll-agents-team status` | Show team status, locks, routing rules, memory entries |
+| `ll-agents-team regenerate` | Regenerate all coordinator, coach, and agent charter files |
+
+---
+
+## How It Works
+
+### The Coordinator
+
+The coordinator is a Copilot agent (`.github/agents/team.md`, visible as **Team** in the agent picker). It:
+
+1. **Reads context** — shared learnings, decisions, agent memories, active locks
+2. **Clarifies** — asks targeted questions via `vscode_askQuestions` if the task is ambiguous
+3. **Plans** — presents a written plan and waits for your confirmation before doing anything
+4. **Delegates** — launches sub-agents via `runSubagent`, never writes code itself
+5. **Parallelizes** — runs independent agents simultaneously (up to the configured max)
+6. **Validates** — checks memory was updated after each sub-agent completes
+7. **Reports** — produces a metrics report at the end
+
+### The Coach
+
+The coach is a separate Copilot agent (`.github/agents/team-coach.agent.md`). It:
+
+1. **Reads all source files** in each bounded context — not just folder names
+2. **Reads dependency files** — extracts actual library names for expertise
+3. **Proposes agents** with specific roles, library-accurate expertise, and tight boundaries
+4. **Detects gaps** — flags folders with no agent owner
+5. **Validates** after creation with `ll-agents-team status`
+
+Run `ll-agents-team coach` again whenever you add a major feature area or after significant refactors.
+
+### Conflict Prevention
+
+Each agent declares **file boundaries** — glob patterns defining what they can modify:
+
+```bash
+--boundaries "src/storefront/**:write,src/styles/**:exclusive"
+```
+
+Access levels:
+- **`read`** — can read but not modify
+- **`write`** — can modify (shared ownership allowed)
+- **`exclusive`** — only this agent may modify these files
+
+The coordinator automatically detects overlapping boundaries and never runs conflicting agents in parallel.
+
+### Memory System
+
+**Individual memory** (`.agents-team/memory/{name}.md`): each agent records learnings — patterns, conventions, gotchas — after every task. Persists across sessions.
+
+**Shared learnings** (`.agents-team/shared/learnings.md`): team-wide knowledge relevant to all agents.
+
+**Decisions** (`.agents-team/shared/decisions.md`): log of architectural and design decisions.
+
+Commit `.agents-team/` — your team and all its knowledge persists for everyone who clones the repo.
+
+---
+
+## Agent Templates
+
+Pre-built templates with full role, expertise, boundaries, and working protocol:
+
+```bash
+ll-agents-team templates   # list all
+ll-agents-team add --name "BackendDev" --template generic/backend-dev
+ll-agents-team add --name "OptiFeatureDev" --template ita-opti/opti-feature-dev
+```
+
+Available: `generic/backend-dev`, `generic/frontend-dev`, `generic/doc-dev`, `ita-opti/*`, `ita-pricing-engine/*`, `ita-oms/*`
+
+---
+
+## What Gets Created
+
+```
+.agents-team/
+├── team.json                     # Team roster and coordinator config
+├── routing.json                  # Task routing rules
+├── copilot-instructions.md       # Copilot workspace context
+├── agents/
+│   └── {name}.md                 # Agent charters
+├── shared/
+│   ├── decisions.md              # Team decisions log
+│   └── learnings.md              # Shared team knowledge
+├── memory/
+│   └── {name}.md                 # Individual agent memories
+└── locks/                        # Active file locks (ephemeral)
+
+.github/agents/
+├── team.md                       # Coordinator agent (visible as "Team" in Copilot)
+└── team-coach.agent.md           # Coach agent (visible as "Team Setup Coach")
+```
 
 ---
 
