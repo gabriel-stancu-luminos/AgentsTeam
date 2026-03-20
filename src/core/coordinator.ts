@@ -146,10 +146,9 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
     .join('\n');
 
   return `---
-mode: Team
 name: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, prevents conflicts"
-tools: [agent/runSubagent, terminal/runCommand, search/doSearch, search/findFiles, search/doSemanticSearch, todo/manageTodoList, fetch/fetchUrl, read/readFile, vscode_askQuestions]
+tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ---
 
 # Team Coordinator

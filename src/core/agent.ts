@@ -54,9 +54,8 @@ export function generateCharter(agent: AgentEntry): string {
     : '- _No boundaries defined — coordinate with the team coordinator_';
 
   return `---
-mode: agent
 description: "${agent.name} — ${agent.role}"
-tools: [terminal/runCommand, read/readFile, edit/replaceString, edit/insertString, edit/createFile, edit/deleteFile, search/doSearch, search/findFiles, search/doSemanticSearch, todo/manageTodoList]
+tools: [execute, read, edit, search, todo]
 ---
 
 # ${agent.name} — ${agent.role}
