@@ -8,6 +8,7 @@ import { listCommand } from './commands/list.js';
 import { statusCommand } from './commands/status.js';
 import { listTemplatesCommand } from './commands/templates.js';
 import { regenerateCommand } from './commands/regenerate.js';
+import { coachCommand } from './commands/coach.js';
 
 const program = new Command();
 
@@ -67,5 +68,10 @@ program
   .option('--agents-only', 'Only regenerate agent charters')
   .option('--coordinator-only', 'Only regenerate the coordinator and Copilot instructions')
   .action(regenerateCommand);
+
+program
+  .command('coach')
+  .description('Create or update the Team Setup Coach agent — scans the workspace and designs specific agents')
+  .action(coachCommand);
 
 program.parse();

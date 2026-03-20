@@ -217,13 +217,14 @@ Before any planning or delegation, establish full situational awareness.
 - Read \`.agents-team/shared/learnings.md\` for team-wide accumulated knowledge
 - Read \`.agents-team/shared/decisions.md\` for past architectural and design decisions
 - Scan the project structure to understand the codebase layout
-- Check \`.agents-team/locks/\` for any active file locks from previous sessions
 
 ### 1.2 Assess Team Readiness
-- Run \`ll-agents-team status\` to verify team state
+- Run \`ll-agents-team status\` to verify team state — this shows active locks and routing rules
 - Run \`ll-agents-team list\` to confirm available agents and their boundaries
+- Check \`.agents-team/locks/\` — if any lock files exist from a previous session, read them to understand what was in progress
 - Review each agent's memory (\`.agents-team/memory/{agent-name}.md\`) for relevant past context
-- Identify any gaps: does the current team have the right expertise for the incoming task?
+- Check \`.agents-team/routing.json\` for any file-routing rules that should influence agent assignment
+- Identify any gaps: does the current team have the right expertise for the incoming task? If not, run \`ll-agents-team coach\` to redesign the team before proceeding
 
 ### 1.3 Clarify Requirements
 When given a task, **do not start planning or delegating immediately**. First:
@@ -312,6 +313,7 @@ After each sub-agent completes:
 ### 3.4 Handle Conflicts
 If agents report conflicting changes:
 - Stop the conflicting agents
+- Run \`ll-agents-team status\` to check current lock state
 - Determine which agent's changes should take priority
 - Re-assign the lower-priority work with updated context
 - Record the resolution in \`.agents-team/shared/decisions.md\`
@@ -321,9 +323,9 @@ If agents report conflicting changes:
 
 > **MANDATORY — Memory Updates (Do NOT skip):**
 > Before reporting your results, you MUST complete ALL of the following:
-> 1. **Update your private memory** — Append what you learned, patterns discovered, gotchas encountered, and codebase observations to \`.agents-team/memory/{your-name}.md\`. Use \`run_in_terminal\` to append.
-> 2. **Update shared learnings** — If ANY of your findings would help other team members, append them to \`.agents-team/shared/learnings.md\`.
-> 3. **Record decisions** — If you made any architectural, design, or implementation decisions, append them to \`.agents-team/shared/decisions.md\` using this format:
+> 1. **Update your private memory** — Append what you learned, patterns discovered, gotchas encountered, and codebase observations to \`.agents-team/memory/{your-name}.md\` using your \`edit\` tool (create the file if it doesn't exist). Do NOT use \`run_in_terminal\` for this.
+> 2. **Update shared learnings** — If ANY of your findings would help other team members, append them to \`.agents-team/shared/learnings.md\` using your \`edit\` tool.
+> 3. **Record decisions** — If you made any architectural, design, or implementation decisions, append them to \`.agents-team/shared/decisions.md\` using your \`edit\` tool and this format:
 >    \`\`\`
 >    ## [Date] Decision Title
 >    **By:** {your-name}

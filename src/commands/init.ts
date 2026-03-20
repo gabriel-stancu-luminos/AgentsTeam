@@ -55,8 +55,15 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   console.log('');
   console.log(`🎉 Team "${teamName}" initialized!`);
   console.log('');
-  console.log('Next steps:');
+  console.log('Next step — design your team:');
+  console.log('');
+  console.log('  ll-agents-team coach');
+  console.log('');
+  console.log('This creates a Team Setup Coach agent that scans your workspace and');
+  console.log('designs specific, well-bounded agents for your project.');
+  console.log('Open Copilot Chat and select "Team Setup Coach" from the agent picker.');
+  console.log('');
+  console.log('Or add agents manually:');
   console.log('  ll-agents-team add --name "Frontend" --role "Frontend Developer" --expertise "React,CSS,TypeScript"');
   console.log('  ll-agents-team add --name "Backend" --role "Backend Developer" --expertise "Node.js,PostgreSQL,REST APIs"');
-  console.log('  ll-agents-team list');
 }

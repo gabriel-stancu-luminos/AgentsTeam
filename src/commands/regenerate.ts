@@ -1,13 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   loadTeam,
   teamExists,
   getTeamDir,
   getCoordinatorPath,
+  getGithubAgentsDir,
 } from '../core/team.js';
 import { generateCharter, getCharterPath } from '../core/agent.js';
 import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { generateCoachPrompt } from '../core/coach.js';
 
 interface RegenerateOptions {
   agentsOnly?: boolean;
@@ -26,6 +28,9 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
 
   // Regenerate coordinator prompt
   if (doAll || options.coordinatorOnly) {
+    const agentsDir = getGithubAgentsDir();
+    await mkdir(agentsDir, { recursive: true });
+
     const coordinatorPrompt = generateCoordinatorPrompt(team);
     await writeFile(getCoordinatorPath(), coordinatorPrompt);
     console.log('✓ Regenerated coordinator agent (.github/agents/team.md)');
@@ -38,9 +43,14 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
     );
     console.log('✓ Regenerated Copilot instructions (copilot-instructions.md)');
     updated++;
+
+    const coachPrompt = generateCoachPrompt(team);
+    await writeFile(join(agentsDir, 'team-coach.agent.md'), coachPrompt);
+    console.log('✓ Regenerated Team Setup Coach (.github/agents/team-coach.agent.md)');
+    updated++;
   }
 
-  // Regenerate agent charters (only for agents that don't use custom templates)
+  // Regenerate agent charters for ALL agents — including those originally created from templates
   if (doAll || options.agentsOnly) {
     for (const agent of team.agents) {
       const charter = generateCharter(agent);
