@@ -5,16 +5,15 @@ import { fileURLToPath } from 'node:url';
 import {
   type AgentEntry,
   type FileBoundary,
-  AGENTS_DIR,
   ALUMNI_DIR,
   MEMORY_DIR,
 } from './types.js';
-import { getTeamDir } from './team.js';
+import { getTeamDir, getGithubAgentsDir } from './team.js';
 
 // ── Charter path helpers ─────────────────────────────────────────────────────
 
 export function getCharterPath(agentName: string, root?: string): string {
-  return join(getTeamDir(root), AGENTS_DIR, `${agentName}.md`);
+  return join(getGithubAgentsDir(root), `${agentName}.md`);
 }
 
 export function getAlumniPath(agentName: string, root?: string): string {

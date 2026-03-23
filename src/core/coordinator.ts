@@ -142,7 +142,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
 
   // Build the agent charter paths for delegation instructions
   const agentCharterPaths = team.agents
-    .map((a) => `  - **${a.name}** → \`agentName: ".agents-team/agents/${a.name}.md"\``)
+    .map((a) => `  - **${a.name}** → \`agentName: "${a.name}"\``)
     .join('\n');
 
   const hasAgents = team.agents.length > 0;
@@ -389,13 +389,24 @@ Before any planning or delegation, establish full situational awareness.
 - Identify any gaps: does the current team have the right expertise for the incoming task? If not, run \`ll-agents-team coach\` to redesign the team before proceeding
 
 ### 1.3 Clarify Requirements
-When given a task, **do not start planning or delegating immediately**. First:
-- Assess whether the task description is sufficiently clear to produce a good plan
-- If anything is ambiguous or under-specified, use the **\`vscode_askQuestions\`** tool to collect answers before proceeding
+
+> **⛔ MANDATORY: You MUST ask clarifying questions for virtually every task.** Skipping this step is only permitted when the task is extremely small AND all of the following are true: the target files are already obvious, the required behaviour is fully described, there are no trade-offs to resolve, and no assumptions need to be validated. When in doubt, ask.
+
+**Before doing anything else**, use the **\`vscode_askQuestions\`** tool to surface any unknowns. Typical areas to probe:
+
+- **Scope** — what is explicitly in/out of scope? Any edge cases to handle?
+- **Behaviour & UX** — what should happen for error paths, empty states, or boundary conditions?
+- **Architecture** — any preferred patterns, libraries, or consistency constraints with existing code?
+- **Acceptance criteria** — how will the user know the task is done correctly?
+- **Dependencies** — are there other tickets/PRs/features this must align with?
+- **Priority** — if trade-offs arise, what matters most (speed, correctness, minimal code change)?
+
+**Rules for asking questions:**
 - **Always use \`vscode_askQuestions\`** — never write questions as plain markdown text
-- For every question, supply an \`options\` array with 3–4 short, context-specific choices. Always add \`"Other — please describe"\` as the final option, and set \`allowFreeformInput: true\`
+- For every question, supply an \`options\` array with 3–4 short, context-specific choices derived from the codebase. Always add \`"Other — please describe"\` as the final option, and set \`allowFreeformInput: true\`
 - Group all questions into a **single \`vscode_askQuestions\` call** — do not ask one question at a time
-- **Only proceed to Step 2 once you have enough clarity** (or the task is already clear enough)
+- Tailor every question to the actual task — no generic, boilerplate questions
+- **Only proceed to Step 2 once you have full clarity**
 
 ---
 
