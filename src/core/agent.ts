@@ -166,7 +166,18 @@ export async function listTemplates(): Promise<TemplateInfo[]> {
 }
 
 export function parseTemplateContent(content: string, agentName: string): ParsedTemplate {
-  const lines = content.split('\n');
+  // Strip YAML frontmatter if present, preserving it for the output charter
+  let bodyContent = content;
+  let frontmatterBlock = '';
+  if (bodyContent.startsWith('---\n')) {
+    const closeIdx = bodyContent.indexOf('\n---\n', 4);
+    if (closeIdx !== -1) {
+      frontmatterBlock = bodyContent.slice(0, closeIdx + 5);
+      bodyContent = bodyContent.slice(closeIdx + 5);
+    }
+  }
+
+  const lines = bodyContent.split('\n');
   let role = '';
   let inSection = '';
   const expertise: string[] = [];
@@ -204,9 +215,18 @@ export function parseTemplateContent(content: string, agentName: string): Parsed
 
   // Replace title and all memory-path references
   const newTitle = `# ${agentName} — ${role}`;
-  const charter = [newTitle, ...lines.slice(1)]
+  let charter = [newTitle, ...lines.slice(1)]
     .join('\n')
     .replace(/\.agents-team\/memory\/[^.\s]+\.md/g, `.agents-team/memory/${agentName}.md`);
+
+  // If the template had frontmatter, prepend it with the updated description
+  if (frontmatterBlock) {
+    const updatedFrontmatter = frontmatterBlock.replace(
+      /^description:.*$/m,
+      `description: "${agentName} — ${role}"`,
+    );
+    charter = updatedFrontmatter + charter;
+  }
 
   return { role, expertise, boundaries, charter };
 }
