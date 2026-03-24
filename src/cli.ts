@@ -71,7 +71,7 @@ program
 
 program
   .command('coach')
-  .description('Regenerate the Team coordinator with latest team state, ready for Team Setup Mode')
+  .description('Regenerate the Initiator and Team agents with latest team state')
   .action(coachCommand);
 
 program.parse();

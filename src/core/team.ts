@@ -58,6 +58,10 @@ export function getCoordinatorPath(root?: string): string {
   return join(getGithubAgentsDir(root), 'team.md');
 }
 
+export function getInitiatorPath(root?: string): string {
+  return join(getGithubAgentsDir(root), 'initiator.md');
+}
+
 export async function scaffoldTeamDir(root?: string): Promise<string> {
   const teamDir = getTeamDir(root);
 

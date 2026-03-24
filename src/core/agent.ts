@@ -55,6 +55,7 @@ export function generateCharter(agent: AgentEntry): string {
   return `---
 description: "${agent.name} — ${agent.role}"
 tools: [execute, read, edit, search, todo]
+user-invocable: false
 ---
 
 # ${agent.name} — ${agent.role}

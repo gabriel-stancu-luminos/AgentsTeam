@@ -5,10 +5,11 @@ import {
   teamExists,
   getTeamDir,
   getCoordinatorPath,
+  getInitiatorPath,
   getGithubAgentsDir,
 } from '../core/team.js';
 import { generateCharter, getCharterPath } from '../core/agent.js';
-import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { generateCoordinatorPrompt, generateInitiatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
 
 interface RegenerateOptions {
   agentsOnly?: boolean;
@@ -33,6 +34,11 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
     const coordinatorPrompt = generateCoordinatorPrompt(team);
     await writeFile(getCoordinatorPath(), coordinatorPrompt);
     console.log('✓ Regenerated coordinator agent (.github/agents/team.md)');
+    updated++;
+
+    const initiatorPrompt = generateInitiatorPrompt(team);
+    await writeFile(getInitiatorPath(), initiatorPrompt);
+    console.log('✓ Regenerated initiator agent (.github/agents/initiator.md)');
     updated++;
 
     const copilotInstructions = generateCopilotInstructions(team);

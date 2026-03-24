@@ -7,10 +7,11 @@ import {
   teamExists,
   getTeamDir,
   getCoordinatorPath,
+  getInitiatorPath,
 } from '../core/team.js';
 import { saveRouting } from '../core/router.js';
 import { initSharedMemory } from '../core/memory.js';
-import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { generateCoordinatorPrompt, generateInitiatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
 
 export async function initCommand(options: { name?: string }): Promise<void> {
   const exists = await teamExists();
@@ -44,7 +45,12 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   await writeFile(getCoordinatorPath(), coordinatorPrompt);
   console.log('✓ Generated coordinator agent (.github/agents/team.md)');
 
-  // 6. Generate Copilot workspace instructions
+  // 6. Generate initiator agent prompt (visible in Copilot as "Initiator")
+  const initiatorPrompt = generateInitiatorPrompt(team);
+  await writeFile(getInitiatorPath(), initiatorPrompt);
+  console.log('✓ Generated initiator agent (.github/agents/initiator.md)');
+
+  // 7. Generate Copilot workspace instructions
   const copilotInstructions = generateCopilotInstructions(team);
   await writeFile(
     join(getTeamDir(), 'copilot-instructions.md'),
@@ -59,8 +65,10 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   console.log('');
   console.log('  ll-agents-team coach');
   console.log('');
-  console.log('Then open Copilot Chat, select the Team agent, and say "set up the team".');
-  console.log('The coordinator will scan your workspace and design specific agents for your project.');
+  console.log('Then open Copilot Chat, select the Initiator agent, and say "set up the team".');
+  console.log('The Initiator will scan your workspace and design specific agents for your project.');
+  console.log('');
+  console.log('Once agents are created, switch to the Team agent for development tasks.');
   console.log('');
   console.log('Or add agents manually:');
   console.log('  ll-agents-team add --name "Frontend" --role "Frontend Developer" --expertise "React,CSS,TypeScript"');
