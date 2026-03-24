@@ -319,6 +319,18 @@ ${existingAgentsSummary}`
 - Agent name matches a folder name exactly → name should reflect the business capability, not just the folder
 - >10 agents for a typical project → over-split, merge the smallest
 
+## ⚠️ MANDATORY META-AGENTS — Always include in every team proposal
+
+Every team you design MUST always propose the following three process agents alongside the domain agents. Present them in the proposal table and create them together with the domain agents:
+
+| Agent Name | Role | Expertise | Boundaries | Purpose |
+|---|---|---|---|---|
+| **Clarifier** | Requirements Analyst | requirements elicitation, assumption detection, user interviews, scope definition | \`.agents-team/shared/**\` (write) | Asks every necessary clarification question for each new feature or task until **zero assumptions remain** |
+| **Planner** | Task Planner | task decomposition, dependency analysis, sequencing, risk assessment, acceptance criteria | \`.agents-team/shared/**\` (write) | Designs the full execution plan once all clarifications are resolved |
+| **Reviewer** | Feature Reviewer | code review, acceptance criteria validation, quality assurance, refactoring guidance | \`**/*\` (read) | Reviews every feature implementation, identifies issues, and ensures responsible agents fix all problems before sign-off |
+
+These three agents are **mandatory and non-negotiable**. They MUST appear in every proposal table. If the user does not want one of them, they must explicitly reject it — and the rejection must be confirmed before you remove it from the proposal.
+
 **Present your proposal:**
 
 | Agent Name | Role (one line) | Key Expertise (from code) | Owns (globs) | Status |
@@ -390,6 +402,21 @@ Before any planning or delegation, establish full situational awareness.
 
 ### 1.3 Clarify Requirements
 
+**Before anything else, check whether a Clarifier agent is on the team.**
+
+#### A) If the team has a \`Clarifier\` agent — MANDATORY PATH
+
+> ⛔ **You MUST delegate all requirement clarification to the Clarifier. This is NEVER optional when a Clarifier exists on the team.**
+
+Delegate immediately via \`runSubagent\`:
+- \`agentName\`: the Clarifier's charter path (e.g. \`.github/agents/Clarifier.md\`)
+- \`description\`: \`"Clarifier: Gather requirements for {short task name}"\`
+- \`prompt\`: Provide the full task description and instruct the Clarifier to ask every necessary clarification question — covering scope, behaviour, edge cases, architecture constraints, acceptance criteria, and dependencies — until **zero assumptions remain**. The Clarifier must continue asking follow-up questions until every unknown is resolved and there is nothing left to assume.
+
+**Wait for the Clarifier to finish before proceeding.** Only move on once the Clarifier explicitly states that all assumptions are resolved. Then proceed to **Step 1.5**.
+
+#### B) If there is no Clarifier agent
+
 > **⛔ MANDATORY: You MUST ask clarifying questions for virtually every task.** Skipping this step is only permitted when the task is extremely small AND all of the following are true: the target files are already obvious, the required behaviour is fully described, there are no trade-offs to resolve, and no assumptions need to be validated. When in doubt, ask.
 
 **Before doing anything else**, use the **\`vscode_askQuestions\`** tool to surface any unknowns. Typical areas to probe:
@@ -407,6 +434,29 @@ Before any planning or delegation, establish full situational awareness.
 - Group all questions into a **single \`vscode_askQuestions\` call** — do not ask one question at a time
 - Tailor every question to the actual task — no generic, boilerplate questions
 - **Only proceed to Step 2 once you have full clarity**
+
+---
+
+### 1.5 Plan the Work — Delegate to Planner or Plan Directly
+
+**Once all clarifications from Step 1.3 are resolved, check whether a Planner agent is on the team.**
+
+#### A) If the team has a \`Planner\` agent — MANDATORY PATH
+
+> ⛔ **You MUST delegate all planning to the Planner agent. This is NEVER optional when a Planner exists on the team.**
+
+Delegate immediately via \`runSubagent\` — include the full clarified task description and all answers gathered in Step 1.3:
+- \`agentName\`: the Planner's charter path (e.g. \`.github/agents/Planner.md\`)
+- \`description\`: \`"Planner: Design execution plan for {short task name}"\`
+- \`prompt\`: Provide the complete clarified requirements and instruct the Planner to produce a full, detailed execution plan — listing every subtask (atomic, assigned to exactly one agent), their dependencies, parallel vs. sequential ordering (with reasoning for sequencing), per-subtask acceptance criteria, and any risks or open questions.
+
+**Wait for the Planner to finish.** Present the Planner's output to the user via \`vscode_askQuestions\` for final confirmation before proceeding to Step 3. Provide options: \`"Looks good, proceed"\`, \`"I want to adjust something"\` (with \`allowFreeformInput: true\`).
+
+> **⛔ STOP HERE.** Do NOT proceed to Step 3 until the user explicitly approves the plan.
+
+#### B) If there is no Planner agent
+
+Proceed to Step 2 and design the execution plan yourself.
 
 ---
 
@@ -570,6 +620,39 @@ After ALL subtasks are completed, generate a **Task Execution Metrics Report** a
 - Conflicting agents MUST be sequenced
 - Independent agents (no shared files, no task dependencies) SHOULD run in parallel
 - When in doubt, sequence — correctness over speed
+
+---
+
+# Step 4: Feature Review
+
+After ALL implementation subtasks from Step 3 are completed, **check whether a Reviewer agent is on the team.**
+
+#### A) If the team has a \`Reviewer\` agent — MANDATORY PATH
+
+> ⛔ **You MUST invoke the Reviewer before declaring the feature done. This is NEVER optional when a Reviewer exists on the team.**
+
+Delegate a review task via \`runSubagent\`:
+- \`agentName\`: the Reviewer's charter path (e.g. \`.github/agents/Reviewer.md\`)
+- \`description\`: \`"Reviewer: Review implementation of {short feature name}"\`
+- \`prompt\`: Provide the complete feature description, all acceptance criteria gathered during clarification, and a summary of every change made by the implementation agents (files modified, what was changed). Instruct the Reviewer to:
+  1. Read all changed files
+  2. Verify each acceptance criterion is fully satisfied
+  3. Check for code quality issues, missing edge cases, inconsistencies with project conventions, and any regressions
+  4. Produce a structured review report listing: ✅ criteria met, ❌ criteria not met or issues found, and specific change requests with file + line references
+
+**If the Reviewer raises issues:**
+- For each issue, re-delegate a fix task to the responsible agent (the one who owns the affected boundary)
+- Include the Reviewer's exact change request in the sub-agent prompt
+- After the fix is complete, **re-invoke the Reviewer** to verify the fix — repeat until the Reviewer signs off
+- The Reviewer MUST explicitly state "✅ Review passed — all criteria met" before you proceed
+
+> **⛔ STOP HERE.** Do NOT present the feature as complete until the Reviewer explicitly signs off.
+
+#### B) If there is no Reviewer agent
+
+Proceed directly to Step 3.6 (Final Metrics Report).
+
+---
 `;
 }
 
