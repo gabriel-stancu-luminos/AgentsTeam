@@ -566,14 +566,21 @@ For each bounded context (folder, module, project), **read at least 4–6 source
 - Look for a \`domain/\`, \`modules/\`, \`features/\`, or \`bounded-contexts/\` folder — each child is a separate agent candidate
 - Look at barrel files (\`index.ts\`, \`index.js\`) — they reveal the public API surface of a module
 
-### S1.5 Scan decompiled and declaration files from consumed packages
+**Large project time-boxing rule:**
+If there are **more than 6 bounded contexts**, do not read 4–6 files for every one. Instead:
+- Rank contexts by number of source files (largest first)
+- Fully read the top 6 (4–6 files each as described above)
+- For the remaining contexts: read only the entry point and one service file each
+- Note which contexts received reduced coverage in the S1.7 summary so the user can flag if a reduced context is actually critical
+
+### S1.4 Scan decompiled and declaration files from consumed packages
 
 **REQUIRED — do this after S1.3, before designing agents.**
 
 This step extracts the real classes and APIs your code calls into, so agent expertise entries reflect actual usage rather than just package names.
 
 **For TypeScript/Node projects:**
-- From the imports found in S1.3, collect the packages most referenced across source files
+- From the imports found in S1.3, collect packages that appear at **3 or more distinct import sites** across the codebase, up to a maximum of **10 packages**. If more than 10 qualify, pick the 10 with the highest import frequency.
 - For each key package, scan \`node_modules/{package}/*.d.ts\` and \`node_modules/{package}/dist/*.d.ts\`
 - Record: exact exported class names, interfaces, and key method signatures used in the source
 - Cross-reference: which source modules import which package — modules sharing the same external dependency cluster together as one agent candidate
@@ -591,7 +598,7 @@ This step extracts the real classes and APIs your code calls into, so agent expe
 - Any external class usage that spans multiple bounded contexts should be flagged in the coverage map
 - If decompiled files reveal additional bounded contexts not visible from source alone, add them as agent candidates
 
-### S1.4 Scan compiled and built output
+### S1.5 Scan compiled and built output
 
 **REQUIRED — always scan build output directories before designing agents, even if empty:**
 - **Always** list the contents of: \`dist/\`, \`build/\`, \`out/\`, \`bin/\`, \`obj/\`, \`.output/\`, \`.next/\`, \`target/\`, \`publish/\` — record explicitly whether each exists or is empty
@@ -606,7 +613,7 @@ This step extracts the real classes and APIs your code calls into, so agent expe
 ### S1.6 Review existing agents (if any)
 ${hasAgents
   ? `**Step A — Check for retired agents:**
-Read \`.agents-team/agents/_alumni/\` — retired agents reveal areas that were once explicitly owned. If those areas still exist in the codebase with no current owner, flag them as high-priority coverage gaps.
+Read \`.agents-team/agents/_alumni/\`. If the folder does not exist or is empty, note "no alumni found" in the S1.7 summary and continue — do not treat this as an error. If alumni exist, check whether their source areas still exist in the codebase with no current owner and flag them as high-priority coverage gaps.
 
 **Step B — Read each agent's memory files:**
 For each existing agent, read \`.agents-team/memory/{agent-name}.md\`. These files contain real recorded observations from past work (actual files touched, gotchas, patterns). Use them to validate or challenge declared boundaries:
@@ -617,15 +624,31 @@ For each existing agent, read \`.agents-team/memory/{agent-name}.md\`. These fil
 **Step C — Compare boundaries against findings:**
 Compare each existing agent's boundaries against what you actually found:
 - Does the boundary glob match real folders that exist?
-- Is the expertise list made of actual libraries from the dependencies (including what S1.5 revealed)?
+- Is the expertise list made of actual libraries from the dependencies (including what S1.4 revealed)?
 - Is the role specific enough?
 - Are there gaps — areas of code no agent owns?
-- Did the build scan (S1.4) or decompiled scan (S1.5) reveal modules not covered by any agent?
+- Did the build scan (S1.5) or decompiled scan (S1.4) reveal modules not covered by any agent?
 
 **Current agents:**
 ${existingAgentsSummary}`
   : `No agents exist yet — designing from scratch.`
 }
+
+### S1.7 — Reconnaissance Summary (mandatory gate)
+
+**Before proceeding to Phase 2, write out this summary in full with your actual findings. Do NOT copy the example text into cells — replace it with real data from the scans. Phase 2 design must be grounded in these findings, not in your prior knowledge.**
+
+| Category | Your Findings |
+|---|---|
+| **Bounded contexts** | _(e.g. "orders — src/orders/, payments — src/payments/")_ |
+| **Tech stack per context** | _(e.g. "orders: express, typeorm, zod — payments: stripe, pg")_ |
+| **Key decompiled classes** | _(e.g. "@azure/service-bus → ServiceBusClient used in src/messaging/")_ |
+| **Build artifacts** | _(e.g. "dist/index.js, dist/orders.js" or "none found")_ |
+| **Reduced-coverage contexts** | _(contexts that hit the 6-context cap and got entry-point-only reads, or "none")_ |
+| **Existing agent gaps** | _(e.g. "src/notifications/ — no owner" or "N/A — no agents yet")_ |
+| **Alumni gaps** | _(e.g. "Analytics agent retired, src/analytics/ still exists" or "none")_ |
+
+> ⛔ **Do NOT proceed to Phase 2 until every row contains your actual findings, not the example text above.**
 
 ## Setup Phase 2 — Design Agent Candidates
 
@@ -640,9 +663,9 @@ ${existingAgentsSummary}`
 
 **Specificity requirements — you MUST follow these:**
 - **Derive agent names from the actual class/module names you read**, not from folder names. If services are named \`OrderFulfillmentService\`, \`OrderPaymentService\`, \`OrderShippingService\`, these are signals — not just "Order Service".
-- **Expertise items must be exact npm/NuGet/PyPI/Maven package names** from the dependency files AND class/interface names discovered from S1.5 decompiled scanning (e.g. \`express\`, \`typeorm\`, \`ServiceBusClient\`, \`IOrderRepository\`) — never language names
+- **Expertise items must be exact npm/NuGet/PyPI/Maven package names** from the dependency files AND class/interface names discovered from S1.4 decompiled scanning (e.g. \`express\`, \`typeorm\`, \`ServiceBusClient\`, \`IOrderRepository\`) — never language names
 - **Boundaries must be derived from actual file paths you read**, not guessed. If you read \`src/orders/fulfillment/\`, use \`src/orders/fulfillment/**\` not \`src/orders/**\`
-- **If build output exists (from S1.4)**, each compiled assembly/package/jar that maps to a separate deployable becomes a separate agent candidate
+- **If build output exists (from S1.5)**, each compiled assembly/package/jar that maps to a separate deployable becomes a separate agent candidate
 
 - **One agent per deployable service** if the project is a monorepo with multiple services — never merge microservices into one agent
 
@@ -654,6 +677,12 @@ ${existingAgentsSummary}`
 - No test boundary → add \`tests/{area}/**:write\`
 - Agent name matches a folder name exactly → name should reflect the business capability, not just the folder
 - >10 agents for a typical project → over-split, merge the smallest
+
+**Cross-cutting packages — filter before assigning:**
+Packages that appear in imports across >50% of bounded contexts (e.g. logging, DI container, HTTP client, configuration) are cross-cutting. Do NOT add them to every agent's expertise. Instead:
+- If there is a shared infrastructure or platform layer: assign the cross-cutting package only to the agent that owns that layer
+- If there is no such layer: note the package as "cross-cutting — omitted from domain expertise" in the coverage map
+- Only include a cross-cutting package in a domain agent if that agent is the _exclusive integration owner_ of it (e.g. the agent that configures the DI container or bootstraps the logger)
 
 ## ⚠️ MANDATORY META-AGENTS — Always include in every team proposal
 
@@ -667,6 +696,8 @@ Every team you design MUST always propose the following three process agents alo
 
 These three agents are **mandatory and non-negotiable**. They MUST appear in every proposal table. If the user does not want one of them, they must explicitly reject it — and the rejection must be confirmed before you remove it from the proposal.
 
+**Status column values:** \`New\` — being created now | \`Retained\` — exists, no changes needed | \`Updated\` — exists, will be removed and re-added | \`Remove\` — exists, will be deleted
+
 **Present your proposal:**
 
 | Agent Name | Role (one line) | Key Expertise (from code) | Owns (globs) | Status |
@@ -674,12 +705,12 @@ These three agents are **mandatory and non-negotiable**. They MUST appear in eve
 
 Then show a **coverage map**: every top-level folder → which agent owns it. Flag uncovered folders explicitly.
 
-**Also show a build output map** (if S1.4 found compiled artifacts):
+**Also show a build output map** (if S1.5 found compiled artifacts):
 
 | Compiled artifact | Source folder | Owning agent |
 |---|---|---|
 
-**Also show a decompiled classes map** (if S1.5 found referenced classes):
+**Also show a decompiled classes map** (if S1.4 found referenced classes):
 
 | Package | Key classes/interfaces used | Source modules that use them | Agent expertise candidate |
 |---|---|---|---|
@@ -691,8 +722,15 @@ Use \`vscode_askQuestions\` in a **single call** with questions tailored to the 
 1. "Does this agent breakdown match how your team thinks about ownership?" — options: "Yes, looks right", "Some boundaries are wrong", "Names don't match our naming", "Missing an important area", "Other"
 2. "Are there areas I haven't covered?" — freeform (e.g. shared libraries, CI/CD, migrations)
 3. "Should any agents be merged or split?" — options based on your actual proposal, \`allowFreeformInput: true\`
+4. _(Include only if S1.4 produced a non-empty decompiled classes map)_ "The decompiled scan found these key external classes used across modules: [list from S1.4 findings]. Are these clustered correctly under the proposed agents, or do some span boundaries in a way that doesn't match your team's ownership model?" — \`allowFreeformInput: true\`
 
-Incorporate feedback. Show a revised table. **Do NOT create agents until the user explicitly confirms.**
+Incorporate feedback and show a revised table.
+
+Then use \`vscode_askQuestions\` with a **single confirmation question** before proceeding:
+- "Does this revised agent design look correct and are you ready to create the agents?"
+  - Options: \`"Yes, create the agents"\`, \`"I want to adjust further"\` (\`allowFreeformInput: true\`)
+
+> ⛔ **Do NOT proceed to Phase 4 until the user explicitly selects "Yes, create the agents".** If they select "I want to adjust further", incorporate their feedback and re-confirm.
 
 ## Setup Phase 4 — Create or Update Agents
 
@@ -703,7 +741,16 @@ ll-agents-team add --name "{Name}" --role "{role}" --expertise "{s1},{s2},{s3}" 
 
 After EACH command, check the output for errors. Stop and report if any command fails.
 
-For **existing agents** needing refinement: show the user the exact updated flags — they cannot be patched in place, must be removed and re-added.
+### Updating existing agents
+
+You CANNOT patch an existing agent in place. To update one, follow this procedure exactly:
+
+1. Confirm the agent exists: \`ll-agents-team list\`
+2. Remove it: \`ll-agents-team remove "{Name}"\`
+3. Re-add with updated flags: \`ll-agents-team add --name "{Name}" --role "..." --expertise "..." --boundaries "..."\`
+
+If \`add\` fails with "agent already exists", \`remove\` did not complete — check its output, re-run \`remove\`, then retry \`add\`.
+Never assume an agent is gone — always confirm with \`ll-agents-team list\` before re-adding.
 
 After all agents are created:
 \`\`\`
@@ -718,8 +765,14 @@ Run \`ll-agents-team status\` and verify:
 
 Read \`.agents-team/routing.json\` and verify routing consistency:
 - Every routing rule's glob maps to a boundary owned by an active agent
-- Flag any orphaned rules (pointing to globs no current agent owns after the redesign)
-- Flag agents that have boundaries but no routing rules (reachable only via coordinator, not auto-routing)
+- Identify any orphaned rules (pointing to globs no current agent owns after the redesign)
+- Identify agents that have boundaries but no routing rules (reachable only via coordinator, not auto-routing)
+
+If any routing issues are found, run:
+\`\`\`
+ll-agents-team regenerate
+\`\`\`
+This rebuilds \`routing.json\` from current agent boundaries, pruning orphaned rules and generating missing ones. Re-read \`routing.json\` after regeneration to confirm it now correctly reflects the team layout.
 
 Final report:
 - Agents created (table: name, role, owns)
