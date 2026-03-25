@@ -29,7 +29,7 @@ export {
   getTeamDir,
   getGithubAgentsDir,
   getCoordinatorPath,
-  getInitiatorPath,
+  getCoachPath,
 } from './core/team.js';
 
 // Agent management
@@ -49,7 +49,7 @@ export {
   canRunParallel,
   computeConflictPairs,
   generateCoordinatorPrompt,
-  generateInitiatorPrompt,
+  generateCoachPrompt,
   generateCopilotInstructions,
 } from './core/coordinator.js';
 

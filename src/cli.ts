@@ -72,7 +72,7 @@ program
 
 program
   .command('coach')
-  .description('Regenerate the Initiator and Team agents with latest team state')
+  .description('Regenerate the Coach and Team agents with latest team state')
   .action(coachCommand);
 
 program.parse();

@@ -8,7 +8,7 @@ import {
   teamExists,
   getTeamDir,
   getCoordinatorPath,
-  getInitiatorPath,
+  getCoachPath,
   getGithubAgentsDir,
 } from '../core/team.js';
 import {
@@ -20,7 +20,7 @@ import {
   createAgentEntry,
   writeAgentFiles,
 } from '../core/agent.js';
-import { generateCoordinatorPrompt, generateInitiatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { generateCoordinatorPrompt, generateCoachPrompt, generateCopilotInstructions } from '../core/coordinator.js';
 import { generateDefaultRules, loadRouting, saveRouting } from '../core/router.js';
 
 interface RegenerateOptions {
@@ -48,9 +48,9 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
     console.log('✓ Regenerated coordinator agent (.github/agents/team.md)');
     updated++;
 
-    const initiatorPrompt = generateInitiatorPrompt(team);
-    await writeFile(getInitiatorPath(), initiatorPrompt);
-    console.log('✓ Regenerated initiator agent (.github/agents/initiator.md)');
+    const coachPrompt = generateCoachPrompt(team);
+    await writeFile(getCoachPath(), coachPrompt);
+    console.log('✓ Regenerated coach agent (.github/agents/coach.md)');
     updated++;
 
     const copilotInstructions = generateCopilotInstructions(team);

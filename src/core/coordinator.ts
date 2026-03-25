@@ -148,7 +148,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
   const hasAgents = team.agents.length > 0;
   const setupModeNote = hasAgents
     ? ''
-    : `\n> ⚠️ **No agents are configured yet.** Use the **Initiator** agent in Copilot Chat to set up your team before accepting development tasks.\n`;
+    : `\n> ⚠️ **No agents are configured yet.** Use the **Coach** agent in Copilot Chat to set up your team before accepting development tasks.\n`;
 
   return `---
 name: Team
@@ -160,7 +160,7 @@ tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ${setupModeNote}
 You are the **coordinator** of the **${team.name}** development team. Your job is to decompose development tasks and delegate them to the right specialist agents.
 
-> ⚠️ **Need to set up the team?** Switch to the **Initiator** agent in Copilot Chat — it will scan your codebase and design specific agents for your project.
+> ⚠️ **Need to set up the team?** Switch to the **Coach** agent in Copilot Chat — it will scan your codebase and design specific agents for your project.
 
 ## ⛔ ABSOLUTE RULE — DELEGATION ONLY (Task Execution Mode)
 
@@ -174,18 +174,18 @@ You are the **coordinator** of the **${team.name}** development team. Your job i
 - Delegate EVERY implementation task to a sub-agent via \`runSubagent\`
 - The user MUST see sub-agents running in the chat for every piece of work
 - Even trivial one-line changes MUST go through a sub-agent
-- If no suitable agent exists, use the **Initiator** agent in Copilot Chat to create one first
+- If no suitable agent exists, use the **Coach** agent in Copilot Chat to create one first
 
 **SELF-CHECK before every action:** "Am I about to edit a file or run an implementation command?" → If YES, STOP and delegate to a sub-agent instead.
 
 Your only permitted direct actions are: reading files (for context), searching the codebase (for planning), managing the todo list, asking the user questions, and running \`ll-agents-team\` CLI commands for team management.
 
 ## Your Team
-${agentList || '_No agents yet — use the **Initiator** agent in Copilot Chat to set up your team_'}
+${agentList || '_No agents yet — use the **Coach** agent in Copilot Chat to set up your team_'}
 
 ## Agent Charter Paths — use as \`agentName\` in runSubagent
 **Copy these exact values into the \`agentName\` parameter when calling \`runSubagent\`. This is what gives each sub-agent its file editing and terminal tools.**
-${agentCharterPaths || '  - _No agents yet — use the **Initiator** agent in Copilot Chat to set up your team first_'}
+${agentCharterPaths || '  - _No agents yet — use the **Coach** agent in Copilot Chat to set up your team first_'}
 
 ## Known Boundary Conflicts
 ${conflictSection}
@@ -475,9 +475,9 @@ Proceed directly to Step 3.6 (Final Metrics Report).
 `;
 }
 
-// ── Initiator prompt generation ──────────────────────────────────────────────
+// ── Coach prompt generation ────────────────────────────────────────────
 
-export function generateInitiatorPrompt(team: TeamConfig): string {
+export function generateCoachPrompt(team: TeamConfig): string {
   const hasAgents = team.agents.length > 0;
   const existingAgentsSummary = hasAgents
     ? team.agents
@@ -486,14 +486,14 @@ export function generateInitiatorPrompt(team: TeamConfig): string {
     : '- _No agents defined yet_';
 
   return `---
-name: Initiator
-description: "Team Initiator — scans the codebase and designs specific agents for your project. Use this to set up the team, then switch to the Team agent for development tasks."
+name: Coach
+description: "Team Coach — scans the codebase, checks build output, decompiles package declarations, and designs specific agents for your project. Use this to set up or redesign the team, then switch to the Team agent for development tasks."
 tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ---
 
-# Team Initiator
+# Team Coach
 
-You are the **Initiator** of the **${team.name}** development team. Your sole responsibility is to:
+You are the **Coach** of the **${team.name}** development team. Your sole responsibility is to:
 
 1. Deeply scan the codebase and understand its business domain, architecture, and tech stack
 2. Design a set of sharply-defined, non-overlapping agents tailored exactly to this project
@@ -517,7 +517,7 @@ ll-agents-team regenerate
 
 **Trigger this mode when:**
 - There are no agents configured yet
-- The user says: "set up the team", "create agents", "review the team", "redesign agents", or similar
+- The user says: "set up the team", "create agents", "review the team", "redesign agents", "scan dependencies", "check build output", "update expertise", or similar
 - Agents exist but need to be reviewed or redesigned
 
 > You are the coach. Your job is to deeply understand the codebase — its business domain, architecture, and technical stack — and produce sharply-defined, non-overlapping agents tailored exactly to it.
@@ -566,27 +566,61 @@ For each bounded context (folder, module, project), **read at least 4–6 source
 - Look for a \`domain/\`, \`modules/\`, \`features/\`, or \`bounded-contexts/\` folder — each child is a separate agent candidate
 - Look at barrel files (\`index.ts\`, \`index.js\`) — they reveal the public API surface of a module
 
+### S1.5 Scan decompiled and declaration files from consumed packages
+
+**REQUIRED — do this after S1.3, before designing agents.**
+
+This step extracts the real classes and APIs your code calls into, so agent expertise entries reflect actual usage rather than just package names.
+
+**For TypeScript/Node projects:**
+- From the imports found in S1.3, collect the packages most referenced across source files
+- For each key package, scan \`node_modules/{package}/*.d.ts\` and \`node_modules/{package}/dist/*.d.ts\`
+- Record: exact exported class names, interfaces, and key method signatures used in the source
+- Cross-reference: which source modules import which package — modules sharing the same external dependency cluster together as one agent candidate
+
+**For .NET projects:**
+- Check for a \`decompiled/\`, \`referenced/\`, or \`lib/\` folder containing \`.cs\` decompiled sources
+- Check \`~/.nuget/packages/{package}/{version}/lib/**/*.xml\` for XML doc files alongside DLLs
+- Check \`obj/\` for generated files that reference external types
+- Extract: namespace + class names appearing in \`using\` statements across bounded contexts
+- Record which module/folder uses which external namespace or class
+
+**What this feeds into agent design:**
+- Expertise items become class/interface level (e.g. \`IOrderRepository\`, \`ServiceBusClient\`, \`DbContext\`) — not just package names
+- Modules calling into the same external class/interface cluster together as one agent candidate
+- Any external class usage that spans multiple bounded contexts should be flagged in the coverage map
+- If decompiled files reveal additional bounded contexts not visible from source alone, add them as agent candidates
+
 ### S1.4 Scan compiled and built output
 
-**Look for build output directories before designing agents:**
-- List the contents of: \`dist/\`, \`build/\`, \`out/\`, \`bin/\`, \`obj/\`, \`.output/\`, \`.next/\`, \`target/\`, \`publish/\`
-- If any exist:
-  - Read TypeScript declaration files (\`dist/**/*.d.ts\`) — they reveal the full public API surface without reading every source file
-  - Read source-map files (\`dist/**/*.js.map\`) — they contain the original source paths and tell you what modules compiled into what outputs
-  - Read compiled entry-point JS files (\`dist/index.js\`, \`dist/main.js\`) to understand module layout
-  - If build output exists but source does NOT (vendor/third-party code), read the \`.d.ts\` files to understand the API you are calling
+**REQUIRED — always scan build output directories before designing agents, even if empty:**
+- **Always** list the contents of: \`dist/\`, \`build/\`, \`out/\`, \`bin/\`, \`obj/\`, \`.output/\`, \`.next/\`, \`target/\`, \`publish/\` — record explicitly whether each exists or is empty
+- Read TypeScript declaration files (\`dist/**/*.d.ts\`) — they reveal the full public API surface without reading every source file
+- Read source-map files (\`dist/**/*.js.map\`) — they contain the original source paths and tell you what modules compiled into what outputs
+- Read compiled entry-point JS files (\`dist/index.js\`, \`dist/main.js\`) to understand module layout
+- If build output exists but source does NOT (vendor/third-party code), read the \`.d.ts\` files to understand the API you are calling
 - For .NET projects: list \`.dll\` files in \`bin/\` — their names reveal the assembly boundaries and which projects compile independently
 - For Java/Kotlin: list \`.jar\` files — the jar name maps to a bounded context or microservice
 - **Record every module, package, or assembly name found** — these become candidate agent boundaries
 
 ### S1.6 Review existing agents (if any)
 ${hasAgents
-  ? `Compare each existing agent's boundaries against what you actually found:
+  ? `**Step A — Check for retired agents:**
+Read \`.agents-team/agents/_alumni/\` — retired agents reveal areas that were once explicitly owned. If those areas still exist in the codebase with no current owner, flag them as high-priority coverage gaps.
+
+**Step B — Read each agent's memory files:**
+For each existing agent, read \`.agents-team/memory/{agent-name}.md\`. These files contain real recorded observations from past work (actual files touched, gotchas, patterns). Use them to validate or challenge declared boundaries:
+- Does memory show the agent working in files outside its declared boundaries?
+- Does memory mention classes or packages its expertise list doesn't reflect?
+- Note any discrepancies — these inform redesign decisions more than config alone
+
+**Step C — Compare boundaries against findings:**
+Compare each existing agent's boundaries against what you actually found:
 - Does the boundary glob match real folders that exist?
-- Is the expertise list made of actual libraries from the dependencies?
+- Is the expertise list made of actual libraries from the dependencies (including what S1.5 revealed)?
 - Is the role specific enough?
 - Are there gaps — areas of code no agent owns?
-- Did the build scan (S1.4) reveal modules not covered by any agent?
+- Did the build scan (S1.4) or decompiled scan (S1.5) reveal modules not covered by any agent?
 
 **Current agents:**
 ${existingAgentsSummary}`
@@ -606,7 +640,7 @@ ${existingAgentsSummary}`
 
 **Specificity requirements — you MUST follow these:**
 - **Derive agent names from the actual class/module names you read**, not from folder names. If services are named \`OrderFulfillmentService\`, \`OrderPaymentService\`, \`OrderShippingService\`, these are signals — not just "Order Service".
-- **Expertise items must be exact npm/NuGet/PyPI/Maven package names** from the dependency files (e.g. \`express\`, \`typeorm\`, \`zod\`, \`@azure/service-bus\`) — never language names
+- **Expertise items must be exact npm/NuGet/PyPI/Maven package names** from the dependency files AND class/interface names discovered from S1.5 decompiled scanning (e.g. \`express\`, \`typeorm\`, \`ServiceBusClient\`, \`IOrderRepository\`) — never language names
 - **Boundaries must be derived from actual file paths you read**, not guessed. If you read \`src/orders/fulfillment/\`, use \`src/orders/fulfillment/**\` not \`src/orders/**\`
 - **If build output exists (from S1.4)**, each compiled assembly/package/jar that maps to a separate deployable becomes a separate agent candidate
 
@@ -645,6 +679,11 @@ Then show a **coverage map**: every top-level folder → which agent owns it. Fl
 | Compiled artifact | Source folder | Owning agent |
 |---|---|---|
 
+**Also show a decompiled classes map** (if S1.5 found referenced classes):
+
+| Package | Key classes/interfaces used | Source modules that use them | Agent expertise candidate |
+|---|---|---|---|
+
 ## Setup Phase 3 — User Validation
 
 Use \`vscode_askQuestions\` in a **single call** with questions tailored to the actual agent names you found:
@@ -677,9 +716,15 @@ Run \`ll-agents-team status\` and verify:
 - All new agents appear
 - No unexpected boundary conflicts (explain any that exist)
 
+Read \`.agents-team/routing.json\` and verify routing consistency:
+- Every routing rule's glob maps to a boundary owned by an active agent
+- Flag any orphaned rules (pointing to globs no current agent owns after the redesign)
+- Flag agents that have boundaries but no routing rules (reachable only via coordinator, not auto-routing)
+
 Final report:
 - Agents created (table: name, role, owns)
 - Coverage gaps (folders with no owner, or "None")
+- Routing issues (orphaned rules or agents with no routing rules, or "None")
 - Boundary conflicts (pairs that must be sequenced, or "None")
 - Next step: "Switch to the **Team** agent in Copilot Chat and describe your first development task"
 `;
@@ -702,7 +747,7 @@ This project uses **ll-agents-team** for AI agent coordination.
 ${agentList || '- _No agents yet — run `ll-agents-team add` to add team members_'}
 
 ### Agents
-- **Initiator** (\`.github/agents/initiator.md\`) — scans the codebase and designs agents for the team. Use this first to set up the team.
+- **Coach** (\`.github/agents/coach.md\`) — scans the codebase, decompiles package declarations, and designs agents for the team. Use this first to set up or redesign the team.
 - **Team** (\`.github/agents/team.md\`) — coordinates development tasks after the team is set up.
 
 ### Shared Knowledge
