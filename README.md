@@ -30,11 +30,9 @@ This creates `.agents-team/` with your team configuration, shared memory files, 
 
 ### 3. Design your team with the Coach
 
-```bash
-ll-agents-team coach
-```
+Open Copilot Chat, select the **Coach** agent, and say **"set up the team"**.
 
-Then open Copilot Chat, select the **Coach** agent, and say **"set up the team"**.
+> **Note:** After `init`, the Coach agent is ready to use immediately — no extra CLI command needed. Run `ll-agents-team coach` only if you're re-running setup later (after a refactor, new service, or team redesign) to refresh the agent files with the latest team state before opening the Coach.
 
 The Coach will:
 1. Map your project structure and read dependency files (npm, NuGet, pip, Maven)
