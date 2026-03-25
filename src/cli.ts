@@ -59,7 +59,8 @@ program
 
 program
   .command('status')
-  .description('Show team status, locks, and routing')
+  .description('Show team status, locks, routing, and recent activity')
+  .option('-w, --watch', 'Refresh every 3 seconds (press Ctrl+C to exit)')
   .action(statusCommand);
 
 program
