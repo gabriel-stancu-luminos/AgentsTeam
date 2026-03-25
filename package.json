@@ -1,6 +1,6 @@
 {
   "name": "ll-agents-team",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "Lightweight AI agent team orchestration for any project — a coordinator that creates teams, delegates tasks in parallel, and prevents conflicts",
   "type": "module",
   "main": "dist/index.js",

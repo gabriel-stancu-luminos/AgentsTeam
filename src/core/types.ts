@@ -91,3 +91,26 @@ export const MEMORY_DIR = 'memory';
 export const SHARED_DIR = 'shared';
 export const LOCKS_DIR = 'locks';
 export const LOG_DIR = 'log';
+export const ACTIVITY_LOG_FILE = 'activity.jsonl';
+
+// ── Activity log ──────────────────────────────────────────────────────────────
+
+export type ActivityEvent =
+  | 'team:initialized'
+  | 'agent:added'
+  | 'agent:removed'
+  | 'task:created'
+  | 'task:assigned'
+  | 'task:status-changed'
+  | 'memory:updated'
+  | 'lock:acquired'
+  | 'lock:released';
+
+export interface ActivityEntry {
+  timestamp: string;
+  event: ActivityEvent;
+  agent?: string;
+  taskId?: string;
+  detail: string;
+  meta?: Record<string, unknown>;
+}

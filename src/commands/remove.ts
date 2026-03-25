@@ -12,6 +12,7 @@ import { archiveAgent } from '../core/agent.js';
 import { removeRoutingRules } from '../core/router.js';
 import { releaseAllLocks } from '../core/lock-manager.js';
 import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { appendActivity } from '../core/activity-log.js';
 
 export async function removeCommand(name: string): Promise<void> {
   if (!(await teamExists())) {
@@ -41,6 +42,8 @@ export async function removeCommand(name: string): Promise<void> {
   // Release any held locks
   const released = await releaseAllLocks(name);
   if (released > 0) console.log(`✓ Released ${released} file lock(s)`);
+
+  await appendActivity({ event: 'agent:removed', agent: name, detail: `Removed agent "${name}" from team` });
 
   // Regenerate coordinator prompt
   const coordinatorPrompt = generateCoordinatorPrompt(team);

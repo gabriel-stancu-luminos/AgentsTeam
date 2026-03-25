@@ -93,3 +93,8 @@ export {
   isLocked,
   cleanExpiredLocks,
 } from './core/lock-manager.js';
+
+// Activity log
+export type { ActivityEntry, ActivityEvent } from './core/types.js';
+export { ACTIVITY_LOG_FILE } from './core/types.js';
+export { appendActivity, readActivityLog } from './core/activity-log.js';

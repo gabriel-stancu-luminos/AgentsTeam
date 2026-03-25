@@ -11,6 +11,7 @@ import {
 import { createAgentEntry, writeAgentFiles, resolveTemplate, parseTemplateContent, listTemplates } from '../core/agent.js';
 import { addRoutingRule, generateDefaultRules, saveRouting, loadRouting } from '../core/router.js';
 import { generateCoordinatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { appendActivity } from '../core/activity-log.js';
 import type { FileBoundary } from '../core/types.js';
 
 interface AddOptions {
@@ -131,4 +132,11 @@ export async function addCommand(options: AddOptions): Promise<void> {
   if (boundaryList.length > 0) {
     console.log(`   Boundaries: ${boundaryList.map((b) => `${b.pattern} (${b.access})`).join(', ')}`);
   }
+
+  await appendActivity({
+    event: 'agent:added',
+    agent: agent.name,
+    detail: `Added agent "${agent.name}" (${role})`,
+    meta: { expertise: expertiseList, boundaries: boundaryList.length },
+  });
 }

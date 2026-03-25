@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { MemoryEntry } from './types.js';
 import { getTeamDir } from './team.js';
 import { MEMORY_DIR, SHARED_DIR } from './types.js';
+import { appendActivity } from './activity-log.js';
 
 // ── Paths ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,10 @@ export async function appendAgentMemory(
     );
   }
   await appendFile(path, formatEntry(entry));
+  await appendActivity(
+    { event: 'memory:updated', agent: entry.agent, detail: `${entry.type}: ${entry.content.slice(0, 120)}` },
+    root,
+  );
 }
 
 // ── Shared learnings ─────────────────────────────────────────────────────────
@@ -66,6 +71,10 @@ export async function appendSharedLearning(
 ): Promise<void> {
   const path = sharedLearningsPath(root);
   await appendFile(path, formatEntry(entry));
+  await appendActivity(
+    { event: 'memory:updated', agent: entry.agent, detail: `shared-learning: ${entry.content.slice(0, 120)}` },
+    root,
+  );
 }
 
 // ── Decisions ────────────────────────────────────────────────────────────────
@@ -82,6 +91,10 @@ export async function appendDecision(
 ): Promise<void> {
   const path = decisionsPath(root);
   await appendFile(path, formatEntry(entry));
+  await appendActivity(
+    { event: 'memory:updated', agent: entry.agent, detail: `decision: ${entry.content.slice(0, 120)}` },
+    root,
+  );
 }
 
 // ── Create initial shared files ──────────────────────────────────────────────

@@ -12,6 +12,7 @@ import {
 import { saveRouting } from '../core/router.js';
 import { initSharedMemory } from '../core/memory.js';
 import { generateCoordinatorPrompt, generateInitiatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { appendActivity } from '../core/activity-log.js';
 
 export async function initCommand(options: { name?: string }): Promise<void> {
   const exists = await teamExists();
@@ -66,6 +67,8 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   console.log('  ll-agents-team coach');
   console.log('');
   console.log('Then open Copilot Chat, select the Initiator agent, and say "set up the team".');
+
+  await appendActivity({ event: 'team:initialized', detail: `Team "${teamName}" initialized` });
   console.log('The Initiator will scan your workspace and design specific agents for your project.');
   console.log('');
   console.log('Once agents are created, switch to the Team agent for development tasks.');

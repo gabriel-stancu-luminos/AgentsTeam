@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { FileLock } from './types.js';
 import { getTeamDir } from './team.js';
 import { LOCKS_DIR } from './types.js';
+import { appendActivity } from './activity-log.js';
 
 const LOCK_TTL_MS = 30 * 60 * 1000; // 30 minutes default
 
@@ -41,6 +42,7 @@ export async function acquireLock(
   };
 
   await writeFile(lockFilePath(file, root), JSON.stringify(lock, null, 2));
+  await appendActivity({ event: 'lock:acquired', agent, taskId, detail: `Locked: ${file}` }, root);
   return true;
 }
 
@@ -57,6 +59,7 @@ export async function releaseLock(
   if (existsSync(path)) {
     await unlink(path);
   }
+  await appendActivity({ event: 'lock:released', agent, detail: `Released: ${file}` }, root);
   return true;
 }
 
