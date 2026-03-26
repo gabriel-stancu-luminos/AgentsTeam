@@ -1,6 +1,6 @@
 ---
 description: "Reviewer — Feature Reviewer"
-tools: [execute, read, edit, search, todo]
+tools: [execute, read, edit, search, todo, problems, git, codebase]
 user-invocable: false
 ---
 

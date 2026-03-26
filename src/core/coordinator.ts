@@ -153,7 +153,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
   return `---
 name: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, and prevents conflicts."
-tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
+tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions, problems, github, git, codebase]
 ---
 
 # Team Coordinator
@@ -346,11 +346,15 @@ The prompt must always include:
 ### 3.3 Review & Validate Each Completion
 After each sub-agent completes:
 1. **Review the output** — does it meet acceptance criteria?
-2. **Verify memory was updated** — check that \`.agents-team/memory/{agent-name}.md\` was modified. If NOT, **re-delegate a memory-update-only task to that agent immediately**
-3. **Verify shared memory** — if the agent made discoveries relevant to the team, ensure \`.agents-team/shared/learnings.md\` was updated
-4. **Mark the subtask as completed** in the todo list
-5. **Record metrics** — note the agent name, task description, and outcome for the final report
-6. **Chain follow-up work** — if task B depends on task A's output, pass the result forward
+2. **Check the build** — use the **\`problems\`** skill to read VS Code diagnostics immediately after the sub-agent reports done:
+   - Zero new errors is the pass bar — record the before/after error count
+   - If new errors appear, re-delegate a fix task to the responsible agent with the exact error messages before proceeding to the next subtask
+   - New warnings are flagged in the metrics report but do not block progress unless they are deprecation warnings in the agent's ownership area
+3. **Verify memory was updated** — check that \`.agents-team/memory/{agent-name}.md\` was modified. If NOT, **re-delegate a memory-update-only task to that agent immediately**
+4. **Verify shared memory** — if the agent made discoveries relevant to the team, ensure \`.agents-team/shared/learnings.md\` was updated
+5. **Mark the subtask as completed** in the todo list
+6. **Record metrics** — note the agent name, task description, and outcome for the final report
+7. **Chain follow-up work** — if task B depends on task A's output, pass the result forward
 
 ### 3.4 Handle Conflicts
 If agents report conflicting changes:
@@ -467,6 +471,18 @@ Delegate a review task via \`runSubagent\`:
 
 > **⛔ STOP HERE.** Do NOT present the feature as complete until the Reviewer explicitly signs off.
 
+### 4.1 PR Creation (after Reviewer sign-off)
+
+Once the Reviewer has signed off, use the **\`github\`** skill to create a pull request:
+1. Use \`vscode_askQuestions\` to confirm with the user: "Would you like me to create a GitHub PR for this feature?"
+   - Options: \`"Yes, create the PR"\`, \`"No, I'll handle it manually"\`
+2. If confirmed:
+   - **Title**: concise feature name matching the task description
+   - **Body**: include — feature summary, list of files changed (per-agent), acceptance criteria (✅ each met), and any decisions recorded in \`.agents-team/shared/decisions.md\` during this task
+   - **Labels**: add relevant labels if they exist (e.g. \`enhancement\`, \`bug\`, \`chore\`)
+   - **Linked issues**: if the task was triggered by a GitHub issue, reference it with \`Closes #N\` in the PR body
+3. After the PR is created, record the PR URL in \`.agents-team/shared/decisions.md\` under the relevant decision entry
+
 #### B) If there is no Reviewer agent
 
 Proceed directly to Step 3.6 (Final Metrics Report).
@@ -488,7 +504,7 @@ export function generateCoachPrompt(team: TeamConfig): string {
   return `---
 name: Coach
 description: "Team Coach — scans the codebase, checks build output, decompiles package declarations, and designs specific agents for your project. Use this to set up or redesign the team, then switch to the Team agent for development tasks."
-tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
+tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions, problems, github, git, codebase]
 ---
 
 # Team Coach
@@ -600,7 +616,16 @@ This step extracts the real classes and APIs your code calls into, so agent expe
 
 ### S1.5 Scan compiled and built output
 
-**REQUIRED — always scan build output directories before designing agents, even if empty:**
+**REQUIRED — always scan build output directories and diagnostics before designing agents, even if empty:**
+
+**S1.5.0 — Read VS Code diagnostics (do this first)**
+Use the **\`problems\`** skill to read the current diagnostics panel:
+- Record the total count of errors and warnings
+- List every unique error code or message — these reveal broken boundaries, missing dependencies, and mismatched types that are not visible from source files alone
+- If errors are concentrated in one folder, that folder is a high-risk boundary and should get its own agent
+- If warnings reference deprecated APIs, note the packages involved — the responsible agent must own the migration
+
+**S1.5.1 — Scan build output directories:**
 - **Always** list the contents of: \`dist/\`, \`build/\`, \`out/\`, \`bin/\`, \`obj/\`, \`.output/\`, \`.next/\`, \`target/\`, \`publish/\` — record explicitly whether each exists or is empty
 - Read TypeScript declaration files (\`dist/**/*.d.ts\`) — they reveal the full public API surface without reading every source file
 - Read source-map files (\`dist/**/*.js.map\`) — they contain the original source paths and tell you what modules compiled into what outputs
@@ -609,6 +634,16 @@ This step extracts the real classes and APIs your code calls into, so agent expe
 - For .NET projects: list \`.dll\` files in \`bin/\` — their names reveal the assembly boundaries and which projects compile independently
 - For Java/Kotlin: list \`.jar\` files — the jar name maps to a bounded context or microservice
 - **Record every module, package, or assembly name found** — these become candidate agent boundaries
+
+### S1.5.2 — GitHub context scan (if the project is a GitHub repo)
+
+Use the **\`github\`** skill to gather living context that source files alone cannot provide:
+- List open **issues** — note which folders or modules they reference; areas with many open issues are higher-risk and may need a dedicated agent or stricter boundary
+- List open **pull requests** — PRs touching multiple modules reveal coupling that isn't obvious from static analysis; if two bounded contexts are always co-changed, consider merging their agents or adding shared-boundary rules
+- Read the **last 10 closed PRs** titles and labels — recurring areas of change become primary ownership candidates
+- If a PR is open and touches files in a bounded context you are designing, flag it in the S1.7 summary so the new agent knows active work is in progress
+
+> If the project is not a GitHub repo (no remote, private VCS, etc.), skip this step and note "not applicable" in S1.7.
 
 ### S1.6 Review existing agents (if any)
 ${hasAgents
@@ -644,6 +679,8 @@ ${existingAgentsSummary}`
 | **Tech stack per context** | _(e.g. "orders: express, typeorm, zod — payments: stripe, pg")_ |
 | **Key decompiled classes** | _(e.g. "@azure/service-bus → ServiceBusClient used in src/messaging/")_ |
 | **Build artifacts** | _(e.g. "dist/index.js, dist/orders.js" or "none found")_ |
+| **VS Code diagnostics** | _(e.g. "12 errors concentrated in src/payments/, 3 deprecation warnings in src/common/" or "clean")_ |
+| **Open GitHub issues/PRs** | _(e.g. "5 open issues touching src/orders/ and src/payments/" or "none / not a GitHub repo")_ |
 | **Reduced-coverage contexts** | _(contexts that hit the 6-context cap and got entry-point-only reads, or "none")_ |
 | **Existing agent gaps** | _(e.g. "src/notifications/ — no owner" or "N/A — no agents yet")_ |
 | **Alumni gaps** | _(e.g. "Analytics agent retired, src/analytics/ still exists" or "none")_ |
