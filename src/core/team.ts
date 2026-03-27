@@ -87,7 +87,7 @@ export async function scaffoldTeamDir(root?: string): Promise<string> {
 
 export function createDefaultTeam(name?: string): TeamConfig {
   const coordinator: CoordinatorConfig = {
-    maxParallelTasks: 4,
+    maxParallelTasks: 6,
     conflictStrategy: 'boundary',
   };
 

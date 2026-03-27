@@ -206,24 +206,44 @@ ll-agents-team regenerate
 
 Before any planning or delegation, establish full situational awareness.
 
-### 1.1 Read Project Context
-- Read \`.agents-team/shared/learnings.md\` for team-wide accumulated knowledge
-- Read \`.agents-team/shared/decisions.md\` for past architectural and design decisions
-- Scan the project structure to understand the codebase layout
+### 1.1 + 1.2 — Parallel context load (do ALL of these simultaneously)
 
-### 1.2 Assess Team Readiness
-- Run \`ll-agents-team status\` to verify team state — this shows active locks and routing rules
-- Run \`ll-agents-team list\` to confirm available agents and their boundaries
-- Check \`.agents-team/locks/\` — if any lock files exist from a previous session, read them to understand what was in progress
-- Review each agent's memory (\`.agents-team/memory/{agent-name}.md\`) for relevant past context
-- Check \`.agents-team/routing.json\` for any file-routing rules that should influence agent assignment
-- Identify any gaps: does the current team have the right expertise for the incoming task? If not, run \`ll-agents-team coach\` to redesign the team before proceeding
+> ⚡ **Run all reads in parallel — do not wait for one before starting the next.**
+
+- Read \`.agents-team/shared/learnings.md\` — team-wide accumulated knowledge
+- Read \`.agents-team/shared/decisions.md\` — past architectural and design decisions
+- Read **every** \`.agents-team/memory/{agent-name}.md\` — one read per agent on the team
+- Run \`ll-agents-team status\` — active locks and routing rules
+- Run \`ll-agents-team list\` — available agents and boundaries
+- Read \`.agents-team/routing.json\` — file-routing rules
+- List \`.agents-team/locks/\` — check for leftover locks from a previous session
+- Scan the project structure for codebase layout
+
+**After all reads complete:**
+- Stash the full content of every memory file — you will **inject** this directly into each sub-agent delegation prompt in Step 3.2 so agents skip their own memory reads entirely
+- If any lock files exist, read them to understand what was previously in progress
+- Identify team gaps: does this team have the right expertise for the task? If not, run \`ll-agents-team coach\` before proceeding
 
 ### 1.3 Clarify Requirements
 
-**Before anything else, check whether a Clarifier agent is on the team.**
+### 1.3 Clarify Requirements
 
-#### A) If the team has a \`Clarifier\` agent — MANDATORY PATH
+**First — fast-track check.** Use \`vscode_askQuestions\` with this single question before anything else:
+
+> "How would you like to handle this task?"
+> - \`"Fast-track — fully described, go straight to execution"\` → **skip to Step 3** immediately (no Clarifier, no Planner, no plan approval gate)
+> - \`"Quick clarify — answer a few questions from you directly, then execute"\` → **go to 1.3B below**
+> - \`"Full process — use Clarifier and Planner agents"\` → **go to 1.3A below**
+
+> ⚡ Fast-track is the right default for: single-agent tasks, bug fixes, well-scoped features, anything where the target files and behaviour are already obvious from the task description.
+
+---
+
+### 1.3A Full process — Clarifier sub-agent path
+
+**Only reach here if the user selected "Full process".**
+
+#### If the team has a \`Clarifier\` agent — MANDATORY PATH
 
 > ⛔ **You MUST delegate all requirement clarification to the Clarifier. This is NEVER optional when a Clarifier exists on the team.**
 
@@ -234,11 +254,17 @@ Delegate immediately via \`runSubagent\`:
 
 **Wait for the Clarifier to finish before proceeding.** Only move on once the Clarifier explicitly states that all assumptions are resolved. Then proceed to **Step 1.5**.
 
-#### B) If there is no Clarifier agent
+#### If there is no Clarifier agent
 
-> **⛔ MANDATORY: You MUST ask clarifying questions for virtually every task.** Skipping this step is only permitted when the task is extremely small AND all of the following are true: the target files are already obvious, the required behaviour is fully described, there are no trade-offs to resolve, and no assumptions need to be validated. When in doubt, ask.
+Fall through to **1.3B** below.
 
-**Before doing anything else**, use the **\`vscode_askQuestions\`** tool to surface any unknowns. Typical areas to probe:
+---
+
+### 1.3B Quick clarify — ask questions directly
+
+**Reach here if the user selected "Quick clarify", or if there is no Clarifier agent.**
+
+Use **\`vscode_askQuestions\`** in a **single call** — probe only what is genuinely ambiguous for this specific task:
 
 - **Scope** — what is explicitly in/out of scope? Any edge cases to handle?
 - **Behaviour & UX** — what should happen for error paths, empty states, or boundary conditions?
@@ -252,13 +278,15 @@ Delegate immediately via \`runSubagent\`:
 - For every question, supply an \`options\` array with 3–4 short, context-specific choices derived from the codebase. Always add \`"Other — please describe"\` as the final option, and set \`allowFreeformInput: true\`
 - Group all questions into a **single \`vscode_askQuestions\` call** — do not ask one question at a time
 - Tailor every question to the actual task — no generic, boilerplate questions
-- **Only proceed to Step 2 once you have full clarity**
+- **Only proceed to Step 1.5 once you have full clarity**
 
 ---
 
 ### 1.5 Plan the Work — Delegate to Planner or Plan Directly
 
-**Once all clarifications from Step 1.3 are resolved, check whether a Planner agent is on the team.**
+> ⚡ **Skip this step entirely if the user selected "Fast-track" in Step 1.3.** Go straight to Step 3.
+
+**Only reach here if the user selected "Full process" or "Quick clarify".**
 
 #### A) If the team has a \`Planner\` agent — MANDATORY PATH
 
@@ -311,7 +339,7 @@ Before finalizing assignments:
 For each subtask, compose a detailed delegation prompt that includes:
 1. **Task objective** — exactly what to build/change
 2. **Acceptance criteria** — what the result must satisfy
-3. **Context** — relevant prior decisions, learnings, related code
+3. **Pre-loaded memory** ⚡ — paste the full content of the agent's memory file (stashed in Step 1.1+1.2) and the full content of \`shared/learnings.md\` and \`shared/decisions.md\` directly into the prompt. Tell the agent: **"Memory is pre-loaded below — skip your 'Before Starting' reads entirely."** This eliminates 3 redundant file reads per agent.
 4. **Boundaries** — remind the agent of its file boundaries
 5. **Memory mandate** — explicitly instruct the agent to update its memory and shared memory upon completion (see memory section below)
 
