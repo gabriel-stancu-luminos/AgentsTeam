@@ -195,6 +195,26 @@ Boundary conflicts: None
 
 ---
 
+## Skills
+
+Four skills ship with the project under `.github/skills/`. They are loaded automatically by the Team coordinator and Coach when the relevant tool is needed, and are also available as slash commands in Copilot Chat.
+
+| Skill | Tool | Use for |
+|---|---|---|
+| `build-diagnostics` | `problems` | Reading VS Code diagnostics after code changes — zero new errors is the pass bar |
+| `codebase` | `codebase` | Semantic search and file exploration before planning or delegating |
+| `git` | `git` | Committing completed work, checking state, reading recent history |
+| `github-pr-workflow` | `github` | Creating PRs with structured body, acceptance criteria, and linked issues |
+
+Invoke directly with a slash command:
+
+```
+/build-diagnostics after Backend Engineer completed auth changes
+/codebase find all usages of OrderService
+/git commit completed storefront changes
+/github-pr-workflow Hero Banner block — storefront
+```
+
 ## Agent Templates
 
 Pre-built templates include a full role description, expertise list, file boundaries, and working protocol.
@@ -225,24 +245,34 @@ ll-agents-team add --name "BackendDev" --template generic/backend-dev --role "Se
 
 ```
 .agents-team/
-â”œâ”€â”€ team.json                   # Team roster and coordinator config
-â”œâ”€â”€ routing.json                # File routing rules (regex â†’ agent)
-â”œâ”€â”€ copilot-instructions.md     # Copilot workspace context file
-â”œâ”€â”€ agents/
-â”‚   â”œâ”€â”€ {name}.md               # Agent charters
-â”‚   â””â”€â”€ _alumni/                # Charters of removed agents (preserved)
-â”œâ”€â”€ shared/
-â”‚   â”œâ”€â”€ decisions.md            # Architectural decisions log
-â”‚   â””â”€â”€ learnings.md            # Shared team knowledge
-â”œâ”€â”€ memory/
-â”‚   â””â”€â”€ {name}.md               # Per-agent memory files
-â”œâ”€â”€ locks/                      # Active file locks (ephemeral, not committed)
-â””â”€â”€ log/
-    â””â”€â”€ activity.jsonl          # Structured event log
+├── team.json                   # Team roster and coordinator config
+├── routing.json                # File routing rules (regex → agent)
+├── copilot-instructions.md     # Copilot workspace context file
+├── agents/
+│   ├── {name}.md               # Agent charters
+│   └── _alumni/                # Charters of removed agents (preserved)
+├── shared/
+│   ├── decisions.md            # Architectural decisions log
+│   └── learnings.md            # Shared team knowledge
+├── memory/
+│   └── {name}.md               # Per-agent memory files
+├── locks/                      # Active file locks (ephemeral, not committed)
+└── log/
+    └── activity.jsonl          # Structured event log
 
 .github/agents/
-â”œâ”€â”€ coach.md                    # Coach agent â€” team design and setup
-â””â”€â”€ team.md                     # Team coordinator agent â€” task execution
+├── coach.md                    # Coach agent — team design and setup
+└── team.md                     # Team coordinator agent — task execution
+
+.github/skills/
+├── build-diagnostics/          # problems tool — post-agent error validation
+│   └── SKILL.md
+├── codebase/                   # codebase tool — semantic search and file exploration
+│   └── SKILL.md
+├── git/                        # git tool — committing work, checking state, history
+│   └── SKILL.md
+└── github-pr-workflow/         # github tool — PR creation with structured body
+    └── SKILL.md
 ```
 
 Commit `.agents-team/` (excluding `locks/`). Your team and all accumulated knowledge persists for the whole repository.
