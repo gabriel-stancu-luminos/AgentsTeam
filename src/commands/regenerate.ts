@@ -10,6 +10,7 @@ import {
   getCoordinatorPath,
   getCoachPath,
   getGithubAgentsDir,
+  copySkills,
 } from '../core/team.js';
 import {
   generateCharter,
@@ -60,6 +61,12 @@ export async function regenerateCommand(options: RegenerateOptions): Promise<voi
     );
     console.log('✓ Regenerated Copilot instructions (copilot-instructions.md)');
     updated++;
+
+    const skillsCopied = await copySkills();
+    if (skillsCopied.length > 0) {
+      console.log(`✓ Updated ${skillsCopied.length} skill(s) in .github/skills/ (${skillsCopied.join(', ')})`);
+      updated++;
+    }
   }
 
   // Regenerate agent charters for ALL agents — including those originally created from templates

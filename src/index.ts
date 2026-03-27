@@ -28,8 +28,10 @@ export {
   removeAgentFromTeam,
   getTeamDir,
   getGithubAgentsDir,
+  getGithubSkillsDir,
   getCoordinatorPath,
   getCoachPath,
+  copySkills,
 } from './core/team.js';
 
 // Agent management

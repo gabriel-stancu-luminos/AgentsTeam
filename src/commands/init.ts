@@ -8,6 +8,7 @@ import {
   getTeamDir,
   getCoordinatorPath,
   getCoachPath,
+  copySkills,
 } from '../core/team.js';
 import { saveRouting } from '../core/router.js';
 import { initSharedMemory } from '../core/memory.js';
@@ -58,6 +59,12 @@ export async function initCommand(options: { name?: string }): Promise<void> {
     copilotInstructions,
   );
   console.log('✓ Generated Copilot instructions (copilot-instructions.md)');
+
+  // 8. Copy bundled skills
+  const skillsCopied = await copySkills();
+  if (skillsCopied.length > 0) {
+    console.log(`✓ Copied ${skillsCopied.length} skill(s) to .github/skills/ (${skillsCopied.join(', ')})`);
+  }
 
   console.log('');
   console.log(`🎉 Team "${teamName}" initialized!`);
