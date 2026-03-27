@@ -153,7 +153,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
   return `---
 name: Team
 description: "Team coordinator — decomposes tasks, delegates to specialists, and prevents conflicts."
-tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions, problems, github, git, codebase]
+tools: [runCommands, editFiles, search, codebase, fetch, vscode_askQuestions, problems, runTasks, github, git]
 ---
 
 # Team Coordinator
@@ -532,7 +532,7 @@ export function generateCoachPrompt(team: TeamConfig): string {
   return `---
 name: Coach
 description: "Team Coach — scans the codebase, checks build output, decompiles package declarations, and designs specific agents for your project. Use this to set up or redesign the team, then switch to the Team agent for development tasks."
-tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions, problems, github, git, codebase]
+tools: [runCommands, editFiles, search, codebase, fetch, vscode_askQuestions, problems, runTasks, github, git]
 ---
 
 # Team Coach
