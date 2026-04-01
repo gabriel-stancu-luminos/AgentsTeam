@@ -148,7 +148,7 @@ export function generateCoordinatorPrompt(team: TeamConfig): string {
   const hasAgents = team.agents.length > 0;
   const setupModeNote = hasAgents
     ? ''
-    : `\n> ⚠️ **No agents are configured yet.** Use the **Initiator** agent in Copilot Chat to set up your team before accepting development tasks.\n`;
+    : `\n> ⚠️ **No agents are configured yet.** Use the **Coach** agent in Copilot Chat to set up your team before accepting development tasks.\n`;
 
   return `---
 name: Team
@@ -160,7 +160,7 @@ tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ${setupModeNote}
 You are the **coordinator** of the **${team.name}** development team. Your job is to decompose development tasks and delegate them to the right specialist agents.
 
-> ⚠️ **Need to set up the team?** Switch to the **Initiator** agent in Copilot Chat — it will scan your codebase and design specific agents for your project.
+> ⚠️ **Need to set up the team?** Switch to the **Coach** agent in Copilot Chat — it will scan your codebase and design specific agents for your project.
 
 ## ⛔ ABSOLUTE RULE — DELEGATION ONLY (Task Execution Mode)
 
@@ -174,18 +174,18 @@ You are the **coordinator** of the **${team.name}** development team. Your job i
 - Delegate EVERY implementation task to a sub-agent via \`runSubagent\`
 - The user MUST see sub-agents running in the chat for every piece of work
 - Even trivial one-line changes MUST go through a sub-agent
-- If no suitable agent exists, use the **Initiator** agent in Copilot Chat to create one first
+- If no suitable agent exists, use the **Coach** agent in Copilot Chat to create one first
 
 **SELF-CHECK before every action:** "Am I about to edit a file or run an implementation command?" → If YES, STOP and delegate to a sub-agent instead.
 
 Your only permitted direct actions are: reading files (for context), searching the codebase (for planning), managing the todo list, asking the user questions, and running \`ll-agents-team\` CLI commands for team management.
 
 ## Your Team
-${agentList || '_No agents yet — use the **Initiator** agent in Copilot Chat to set up your team_'}
+${agentList || '_No agents yet — use the **Coach** agent in Copilot Chat to set up your team_'}
 
 ## Agent Charter Paths — use as \`agentName\` in runSubagent
 **Copy these exact values into the \`agentName\` parameter when calling \`runSubagent\`. This is what gives each sub-agent its file editing and terminal tools.**
-${agentCharterPaths || '  - _No agents yet — use the **Initiator** agent in Copilot Chat to set up your team first_'}
+${agentCharterPaths || '  - _No agents yet — use the **Coach** agent in Copilot Chat to set up your team first_'}
 
 ## Known Boundary Conflicts
 ${conflictSection}
@@ -463,9 +463,9 @@ Proceed directly to Step 3.6 (Final Metrics Report).
 `;
 }
 
-// ── Initiator prompt generation ──────────────────────────────────────────────
+// ── Coach prompt generation ──────────────────────────────────────────────
 
-export function generateInitiatorPrompt(team: TeamConfig): string {
+export function generateCoachPrompt(team: TeamConfig): string {
   const hasAgents = team.agents.length > 0;
   const existingAgentsSummary = hasAgents
     ? team.agents
@@ -474,14 +474,14 @@ export function generateInitiatorPrompt(team: TeamConfig): string {
     : '- _No agents defined yet_';
 
   return `---
-name: Initiator
-description: "Team Initiator — scans the codebase and designs specific agents for your project. Use this to set up the team, then switch to the Team agent for development tasks."
+name: Coach
+description: "Team Coach — scans the codebase and designs specific agents for your project. Use this to set up the team, then switch to the Team agent for development tasks."
 tools: [agent, execute, read, edit, search, todo, web, vscode_askQuestions]
 ---
 
-# Team Initiator
+# Team Coach
 
-You are the **Initiator** of the **${team.name}** development team. Your sole responsibility is to:
+You are the **Coach** of the **${team.name}** development team. Your sole responsibility is to:
 
 1. Deeply scan the codebase and understand its business domain, architecture, and tech stack
 2. Design a set of sharply-defined, non-overlapping agents tailored exactly to this project
@@ -690,7 +690,7 @@ This project uses **ll-agents-team** for AI agent coordination.
 ${agentList || '- _No agents yet — run `ll-agents-team add` to add team members_'}
 
 ### Agents
-- **Initiator** (\`.github/agents/initiator.md\`) — scans the codebase and designs agents for the team. Use this first to set up the team.
+- **Coach** (\`.github/agents/coach.md\`) — scans the codebase and designs agents for the team. Use this first to set up the team.
 - **Team** (\`.github/agents/team.md\`) — coordinates development tasks after the team is set up.
 
 ### Shared Knowledge

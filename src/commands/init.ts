@@ -7,11 +7,12 @@ import {
   teamExists,
   getTeamDir,
   getCoordinatorPath,
-  getInitiatorPath,
+  getCoachPath,
+  copySkills,
 } from '../core/team.js';
 import { saveRouting } from '../core/router.js';
 import { initSharedMemory } from '../core/memory.js';
-import { generateCoordinatorPrompt, generateInitiatorPrompt, generateCopilotInstructions } from '../core/coordinator.js';
+import { generateCoordinatorPrompt, generateCoachPrompt, generateCopilotInstructions } from '../core/coordinator.js';
 import { appendActivity } from '../core/activity-log.js';
 
 export async function initCommand(options: { name?: string }): Promise<void> {
@@ -46,10 +47,10 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   await writeFile(getCoordinatorPath(), coordinatorPrompt);
   console.log('✓ Generated coordinator agent (.github/agents/team.md)');
 
-  // 6. Generate initiator agent prompt (visible in Copilot as "Initiator")
-  const initiatorPrompt = generateInitiatorPrompt(team);
-  await writeFile(getInitiatorPath(), initiatorPrompt);
-  console.log('✓ Generated initiator agent (.github/agents/initiator.md)');
+  // 6. Generate coach agent prompt (visible in Copilot as "Coach")
+  const coachPrompt = generateCoachPrompt(team);
+  await writeFile(getCoachPath(), coachPrompt);
+  console.log('✓ Generated coach agent (.github/agents/coach.md)');
 
   // 7. Generate Copilot workspace instructions
   const copilotInstructions = generateCopilotInstructions(team);
@@ -59,6 +60,12 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   );
   console.log('✓ Generated Copilot instructions (copilot-instructions.md)');
 
+  // 8. Copy bundled skills
+  const skillsCopied = await copySkills();
+  if (skillsCopied.length > 0) {
+    console.log(`✓ Copied ${skillsCopied.length} skill(s) to .github/skills/ (${skillsCopied.join(', ')})`);
+  }
+
   console.log('');
   console.log(`🎉 Team "${teamName}" initialized!`);
   console.log('');
@@ -66,10 +73,10 @@ export async function initCommand(options: { name?: string }): Promise<void> {
   console.log('');
   console.log('  ll-agents-team coach');
   console.log('');
-  console.log('Then open Copilot Chat, select the Initiator agent, and say "set up the team".');
+  console.log('Then open Copilot Chat, select the Coach agent, and say "set up the team".');
 
   await appendActivity({ event: 'team:initialized', detail: `Team "${teamName}" initialized` });
-  console.log('The Initiator will scan your workspace and design specific agents for your project.');
+  console.log('The Coach will scan your workspace and design specific agents for your project.');
   console.log('');
   console.log('Once agents are created, switch to the Team agent for development tasks.');
   console.log('');

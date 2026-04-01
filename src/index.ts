@@ -28,8 +28,10 @@ export {
   removeAgentFromTeam,
   getTeamDir,
   getGithubAgentsDir,
+  getGithubSkillsDir,
   getCoordinatorPath,
-  getInitiatorPath,
+  getCoachPath,
+  copySkills,
 } from './core/team.js';
 
 // Agent management
@@ -49,7 +51,7 @@ export {
   canRunParallel,
   computeConflictPairs,
   generateCoordinatorPrompt,
-  generateInitiatorPrompt,
+  generateCoachPrompt,
   generateCopilotInstructions,
 } from './core/coordinator.js';
 

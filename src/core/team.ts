@@ -1,6 +1,7 @@
-import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, cp } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   type TeamConfig,
   type AgentEntry,
@@ -58,8 +59,32 @@ export function getCoordinatorPath(root?: string): string {
   return join(getGithubAgentsDir(root), 'team.md');
 }
 
-export function getInitiatorPath(root?: string): string {
-  return join(getGithubAgentsDir(root), 'initiator.md');
+export function getCoachPath(root?: string): string {
+  return join(getGithubAgentsDir(root), 'coach.md');
+}
+
+export function getGithubSkillsDir(root?: string): string {
+  return join(resolve(root ?? '.'), '.github', 'skills');
+}
+
+/**
+ * Copy the bundled skills from this package's .github/skills/ into the
+ * target project's .github/skills/. Existing skill files are overwritten
+ * so consumers always get the latest version after `regenerate`.
+ */
+export async function copySkills(root?: string): Promise<string[]> {
+  const pkgSkillsDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.github', 'skills');
+  const destSkillsDir = getGithubSkillsDir(root);
+
+  if (!existsSync(pkgSkillsDir)) return [];
+
+  await mkdir(destSkillsDir, { recursive: true });
+  await cp(pkgSkillsDir, destSkillsDir, { recursive: true, force: true });
+
+  // Return the list of skill names copied
+  const { readdir } = await import('node:fs/promises');
+  const entries = await readdir(pkgSkillsDir, { withFileTypes: true });
+  return entries.filter((e) => e.isDirectory()).map((e) => e.name);
 }
 
 export async function scaffoldTeamDir(root?: string): Promise<string> {
