@@ -219,59 +219,57 @@ Before any planning or delegation, establish full situational awareness.
 - Check \`.agents-team/routing.json\` for any file-routing rules that should influence agent assignment
 - Identify any gaps: does the current team have the right expertise for the incoming task? If not, run \`ll-agents-team coach\` to redesign the team before proceeding
 
-### 1.3 Clarify Requirements
+### 1.3 Clarify Requirements + Plan — One Pass if Possible
 
-**Before anything else, check whether a Clarifier agent is on the team.**
+**First, assess task complexity before deciding how to proceed:**
 
-#### A) If the team has a \`Clarifier\` agent — MANDATORY PATH
+#### Fast Path — Use when ALL of the following are true:
+1. The target files or areas are already named or obvious from the task description
+2. The required behaviour is specific (no significant design decision left open)
+3. The task has ≤ 4 clear subtasks and no cross-team dependencies
+4. There are no trade-offs that require user input
 
-> ⛔ **You MUST delegate all requirement clarification to the Clarifier. This is NEVER optional when a Clarifier exists on the team.**
+→ **If all four hold: skip directly to Step 2** (plan directly yourself). Do NOT invoke Clarifier or Planner. State to the user: "Requirements are clear — skipping clarification and planning to start faster."
 
-Delegate immediately via \`runSubagent\`:
-- \`agentName\`: the Clarifier's charter path (e.g. \`.github/agents/Clarifier.md\`)
-- \`description\`: \`"Clarifier: Gather requirements for {short task name}"\`
-- \`prompt\`: Provide the full task description and instruct the Clarifier to ask every necessary clarification question — covering scope, behaviour, edge cases, architecture constraints, acceptance criteria, and dependencies — until **zero assumptions remain**. The Clarifier must continue asking follow-up questions until every unknown is resolved and there is nothing left to assume.
+#### Standard Path — Use when fast path criteria are NOT met:
 
-**Wait for the Clarifier to finish before proceeding.** Only move on once the Clarifier explicitly states that all assumptions are resolved. Then proceed to **Step 1.5**.
+**Check which agents are on the team:**
 
-#### B) If there is no Clarifier agent
+##### A) If BOTH a \`Clarifier\` AND a \`Planner\` are on the team — COMBINED CALL
 
-> **⛔ MANDATORY: You MUST ask clarifying questions for virtually every task.** Skipping this step is only permitted when the task is extremely small AND all of the following are true: the target files are already obvious, the required behaviour is fully described, there are no trade-offs to resolve, and no assumptions need to be validated. When in doubt, ask.
+> **Merge clarification and planning into a single \`runSubagent\` call** using the **Planner's** charter path. This eliminates a full sequential subagent round-trip.
 
-**Before doing anything else**, use the **\`vscode_askQuestions\`** tool to surface any unknowns. Typical areas to probe:
+Delegate once via \`runSubagent\`:
+- \`agentName\`: the Planner's charter path (e.g. \`.github/agents/Planner.md\`)
+- \`description\`: \`"Planner: Clarify + plan {short task name}"\`
+- \`prompt\`: Provide the full task description. Instruct the agent to: **(1)** first ask all necessary clarification questions via \`vscode_askQuestions\` in a **single call** covering scope, behaviour, edge cases, acceptance criteria, and constraints — then **(2)** immediately produce the full execution plan from the answers without returning to the coordinator. Output the plan in the standard plan format directly.
 
-- **Scope** — what is explicitly in/out of scope? Any edge cases to handle?
-- **Behaviour & UX** — what should happen for error paths, empty states, or boundary conditions?
-- **Architecture** — any preferred patterns, libraries, or consistency constraints with existing code?
-- **Acceptance criteria** — how will the user know the task is done correctly?
-- **Dependencies** — are there other tickets/PRs/features this must align with?
-- **Priority** — if trade-offs arise, what matters most (speed, correctness, minimal code change)?
+Wait for this single call to finish. Then proceed to **Step 1.5** with the combined output.
 
-**Rules for asking questions:**
-- **Always use \`vscode_askQuestions\`** — never write questions as plain markdown text
-- For every question, supply an \`options\` array with 3–4 short, context-specific choices derived from the codebase. Always add \`"Other — please describe"\` as the final option, and set \`allowFreeformInput: true\`
-- Group all questions into a **single \`vscode_askQuestions\` call** — do not ask one question at a time
-- Tailor every question to the actual task — no generic, boilerplate questions
-- **Only proceed to Step 2 once you have full clarity**
+##### B) If only a \`Clarifier\` is on the team (no Planner)
+
+Delegate to the Clarifier via \`runSubagent\`. Wait for it to finish, then proceed to Step 1.5 to plan yourself.
+
+##### C) If only a \`Planner\` is on the team (no Clarifier)
+
+If any unknowns remain, ask them yourself via a **single \`vscode_askQuestions\` call** — only questions that are genuinely blocking, max 3–4 questions total. Then proceed to Step 1.5 and delegate to the Planner.
+
+##### D) If neither is on the team
+
+Use a **single \`vscode_askQuestions\` call** for any genuinely blocking unknowns (max 3–4 questions). Skip if the fast-path criteria are met. Then plan directly in Step 2.
 
 ---
 
-### 1.5 Plan the Work — Delegate to Planner or Plan Directly
+### 1.5 Finalise the Plan
 
-**Once all clarifications from Step 1.3 are resolved, check whether a Planner agent is on the team.**
+If a plan was already produced in Step 1.3 (combined call), use it directly.
 
-#### A) If the team has a \`Planner\` agent — MANDATORY PATH
+If you need to call the Planner separately, delegate now and wait for the output.
 
-> ⛔ **You MUST delegate all planning to the Planner agent. This is NEVER optional when a Planner exists on the team.**
+**Plan approval:**
 
-Delegate immediately via \`runSubagent\` — include the full clarified task description and all answers gathered in Step 1.3:
-- \`agentName\`: the Planner's charter path (e.g. \`.github/agents/Planner.md\`)
-- \`description\`: \`"Planner: Design execution plan for {short task name}"\`
-- \`prompt\`: Provide the complete clarified requirements and instruct the Planner to produce a full, detailed execution plan — listing every subtask (atomic, assigned to exactly one agent), their dependencies, parallel vs. sequential ordering (with reasoning for sequencing), per-subtask acceptance criteria, and any risks or open questions.
-
-**Wait for the Planner to finish.** Present the Planner's output to the user via \`vscode_askQuestions\` for final confirmation before proceeding to Step 3. Provide options: \`"Looks good, proceed"\`, \`"I want to adjust something"\` (with \`allowFreeformInput: true\`).
-
-> **⛔ STOP HERE.** Do NOT proceed to Step 3 until the user explicitly approves the plan.
+- **If the plan has ≤ 4 subtasks and no HIGH-risk items** → proceed automatically. Inform the user: "Starting execution — N subtasks across N agents." Do NOT block for explicit approval.
+- **If the plan has > 4 subtasks OR any HIGH-risk items** → present via \`vscode_askQuestions\` with options: \`"Looks good, proceed"\`, \`"I want to adjust something"\` (with \`allowFreeformInput: true\`). Wait for approval before proceeding.
 
 #### B) If there is no Planner agent
 
@@ -346,11 +344,10 @@ The prompt must always include:
 ### 3.3 Review & Validate Each Completion
 After each sub-agent completes:
 1. **Review the output** — does it meet acceptance criteria?
-2. **Verify memory was updated** — check that \`.agents-team/memory/{agent-name}.md\` was modified. If NOT, **re-delegate a memory-update-only task to that agent immediately**
-3. **Verify shared memory** — if the agent made discoveries relevant to the team, ensure \`.agents-team/shared/learnings.md\` was updated
-4. **Mark the subtask as completed** in the todo list
-5. **Record metrics** — note the agent name, task description, and outcome for the final report
-6. **Chain follow-up work** — if task B depends on task A's output, pass the result forward
+2. **Check memory signal** — the agent's response should end with \`✅ MEMORY UPDATED\`. If absent, note it but do NOT re-delegate a memory-only task; instead, remind the next invocation of that agent to catch up.
+3. **Mark the subtask as completed** in the todo list
+4. **Record metrics** — note the agent name, task description, and outcome for the final report
+5. **Chain follow-up work** — if task B depends on task A's output, pass the result forward
 
 ### 3.4 Handle Conflicts
 If agents report conflicting changes:
@@ -364,19 +361,10 @@ If agents report conflicting changes:
 **Include these instructions VERBATIM in every sub-agent delegation prompt:**
 
 > **MANDATORY — Memory Updates (Do NOT skip):**
-> Before reporting your results, you MUST complete ALL of the following:
-> 1. **Update your private memory** — Append what you learned, patterns discovered, gotchas encountered, and codebase observations to \`.agents-team/memory/{your-name}.md\` using your \`edit\` tool (create the file if it doesn't exist). Do NOT use \`run_in_terminal\` for this.
-> 2. **Update shared learnings** — If ANY of your findings would help other team members, append them to \`.agents-team/shared/learnings.md\` using your \`edit\` tool.
-> 3. **Record decisions** — If you made any architectural, design, or implementation decisions, append them to \`.agents-team/shared/decisions.md\` using your \`edit\` tool and this format:
->    \`\`\`
->    ## [Date] Decision Title
->    **By:** {your-name}
->    **Context:** Why this decision was needed
->    **Decision:** What was decided
->    **Affects:** Which areas / agents
->    \`\`\`
-> 4. **Completion signal** — End your response with: \`✅ MEMORY UPDATED: [list of files you updated]\`
-> **If you skip memory updates, your task is considered INCOMPLETE.**
+> Before reporting your results, you MUST:
+> 1. **Update your private memory** — Append concise notes (1–3 sentences each) on what you learned, patterns found, and gotchas to \`.agents-team/memory/{your-name}.md\` using your \`edit\` tool. Create the file if it doesn't exist.
+> 2. **Update shared files only if team-wide** — Only if your findings affect other agents: append to \`.agents-team/shared/learnings.md\` and/or \`.agents-team/shared/decisions.md\`. Skip these if your changes are self-contained.
+> 3. **Completion signal** — End your response with: \`✅ MEMORY UPDATED: [list of files updated, or "private memory only"]\`
 
 ### 3.6 Final Metrics Report
 After ALL subtasks are completed, generate a **Task Execution Metrics Report** and present it to the user:
@@ -437,8 +425,8 @@ After ALL subtasks are completed, generate a **Task Execution Metrics Report** a
 - Conflict strategy: **${team.coordinator.conflictStrategy}**
 - ALWAYS check boundary conflicts before running agents in parallel
 - Conflicting agents MUST be sequenced
-- Independent agents (no shared files, no task dependencies) SHOULD run in parallel
-- When in doubt, sequence — correctness over speed
+- Independent agents (no shared files, no task dependencies) MUST run in parallel — do not serialize independent work
+- **Default to parallel.** Only sequence when there is a concrete dependency or proven boundary conflict — not out of caution.
 
 ---
 
@@ -460,10 +448,10 @@ Delegate a review task via \`runSubagent\`:
   4. Produce a structured review report listing: ✅ criteria met, ❌ criteria not met or issues found, and specific change requests with file + line references
 
 **If the Reviewer raises issues:**
-- For each issue, re-delegate a fix task to the responsible agent (the one who owns the affected boundary)
-- Include the Reviewer's exact change request in the sub-agent prompt
-- After the fix is complete, **re-invoke the Reviewer** to verify the fix — repeat until the Reviewer signs off
-- The Reviewer MUST explicitly state "✅ Review passed — all criteria met" before you proceed
+- Classify each issue as **blocking** (broken behaviour, missing acceptance criterion, security problem) or **non-blocking** (style, minor improvement, nice-to-have)
+- For **blocking issues only**: re-delegate a fix task to the responsible agent. After the fix, re-invoke the Reviewer **once** to verify — do not loop more than twice total.
+- For **non-blocking issues**: list them in the metrics report as follow-up items. Do NOT re-run agents for these.
+- The Reviewer must state "✅ Review passed" (or "✅ Review passed with non-blocking notes") before you proceed.
 
 > **⛔ STOP HERE.** Do NOT present the feature as complete until the Reviewer explicitly signs off.
 

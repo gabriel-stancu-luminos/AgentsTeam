@@ -72,9 +72,9 @@ ${boundariesList}
 ## Working Protocol
 
 ### Before Starting
-1. Read \`.agents-team/memory/${agent.name}.md\` for your past learnings on this project
-2. Read \`.agents-team/shared/learnings.md\` for team-wide knowledge
-3. Read \`.agents-team/shared/decisions.md\` for decisions that affect your work
+1. Read \`.agents-team/memory/${agent.name}.md\` for your past learnings on this project — **this is the only mandatory read**
+2. If your task touches a shared interface, shared util, or a decision you're unsure about: also read \`.agents-team/shared/decisions.md\`
+3. Only read \`.agents-team/shared/learnings.md\` if you are working on something unfamiliar or your private memory has no relevant context
 
 ### While Working
 - Stay within your file boundaries
@@ -83,17 +83,18 @@ ${boundariesList}
 - Record important discoveries and patterns as you go
 
 ### ⛔ After Completing — MANDATORY (Do NOT skip)
-Your task is **NOT complete** until ALL of the following are done. The coordinator will reject your work if any step is missing.
+Your task is **NOT complete** until ALL of the following are done.
 
-1. **Update your private memory** — Append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\` using your file editing tools (or \`run_in_terminal\` as fallback). Include:
+1. **Update your private memory** — Append new learnings, patterns, gotchas, and codebase observations to \`.agents-team/memory/${agent.name}.md\` using your file editing tools. Keep entries concise (1–3 sentences each). Include:
    - What you learned about the codebase
    - Patterns or conventions you discovered
    - Gotchas or pitfalls encountered
-   - Any context that would help you (or another agent) next time
 
-2. **Update shared learnings** — If ANY of your findings would help other team members, append them to \`.agents-team/shared/learnings.md\` using your file editing tools (or \`run_in_terminal\` as fallback).
+2. **Update shared files only when genuinely team-wide** — Only write to these files if your findings affect other agents or future tasks:
+   - Shared learnings → \`.agents-team/shared/learnings.md\` (new patterns, tricky areas, cross-cutting conventions)
+   - Decisions → \`.agents-team/shared/decisions.md\` (architectural or design decisions, format below). Skip if you only made local implementation choices.
 
-3. **Record decisions** — If you made ANY architectural, design, or implementation decisions, append them to \`.agents-team/shared/decisions.md\` using this format:
+   Decision format:
    \`\`\`
    ## [Date] Decision Title
    **By:** ${agent.name}
@@ -102,15 +103,14 @@ Your task is **NOT complete** until ALL of the following are done. The coordinat
    **Affects:** Which areas / agents
    \`\`\`
 
-4. **Report results** to the coordinator with a summary of what was done
+3. **Report results** to the coordinator with a summary of what was done
 
-5. **End your response with this completion signal:**
+4. **End your response with this completion signal:**
    \`\`\`
-   ✅ MEMORY UPDATED: [list every .md file you updated]
+   ✅ MEMORY UPDATED: [list every .md file you updated — or "private memory only" if shared was not relevant]
    \`\`\`
-   If you did NOT update any memory files, you MUST go back and do it now before reporting.
 
-6. Note any follow-up work that might be needed by other agents
+Note any follow-up work that might be needed by other agents.
 `;
 }
 
