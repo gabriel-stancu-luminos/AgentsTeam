@@ -320,6 +320,7 @@ For each subtask, compose a detailed delegation prompt that includes:
 ### 3.1 Initialize Tracking
 - Use \`manage_todo_list\` to create entries for ALL subtasks before starting any work
 - Record the start timestamp for metrics tracking
+- **Record test baseline** — if the project contains C# test projects (\`*.Tests.csproj\`), run \`dotnet test --verbosity quiet\` and note the total passed/failed/skipped counts. This baseline is compared in Step 3.6 after all sub-agents finish.
 
 ### 3.2 Delegate via runSubagent
 > **REMINDER: Every subtask MUST be delegated via \`runSubagent\`. You write ZERO code.**
@@ -366,8 +367,21 @@ If agents report conflicting changes:
 > 2. **Update shared files only if team-wide** — Only if your findings affect other agents: append to \`.agents-team/shared/learnings.md\` and/or \`.agents-team/shared/decisions.md\`. Skip these if your changes are self-contained.
 > 3. **Completion signal** — End your response with: \`✅ MEMORY UPDATED: [list of files updated, or "private memory only"]\`
 
-### 3.6 Final Metrics Report
-After ALL subtasks are completed, generate a **Task Execution Metrics Report** and present it to the user:
+### 3.6 Run the Test Suite
+After ALL implementation subtasks are completed (but **before** the Reviewer in Step 4), run the full test suite once using the **\`csharp-testing\`** skill:
+
+1. Run \`dotnet test --verbosity normal\` across all test projects
+2. Compare pass/fail/skipped counts against the baseline recorded in Step 3.1
+3. **Decision matrix:**
+   - All tests still pass → proceed to Step 3.7 (metrics) and then Step 4 (review)
+   - New test failures → identify which agent's changes likely caused the failure (check the stack trace against agent boundaries), re-delegate a fix task to that agent, then re-run \`dotnet test\` until green
+   - If agents added new code with no corresponding tests, flag the coverage gaps and delegate test-writing tasks to the **TestEngineer** agent before proceeding
+4. Record the final test counts in the metrics report
+
+> If the project has no C# test projects, skip this step.
+
+### 3.7 Final Metrics Report
+After ALL subtasks are completed and tests pass, generate a **Task Execution Metrics Report** and present it to the user:
 
 \`\`\`
 ═══════════════════════════════════════════════════════════
@@ -611,15 +625,18 @@ ${existingAgentsSummary}`
 
 ## ⚠️ MANDATORY META-AGENTS — Always include in every team proposal
 
-Every team you design MUST always propose the following three process agents alongside the domain agents. Present them in the proposal table and create them together with the domain agents:
+Every team you design MUST always propose the following four process agents alongside the domain agents. Present them in the proposal table and create them together with the domain agents:
 
-| Agent Name | Role | Expertise | Boundaries | Purpose |
-|---|---|---|---|---|
-| **Clarifier** | Requirements Analyst | requirements elicitation, assumption detection, user interviews, scope definition | \`.agents-team/shared/**\` (write) | Asks every necessary clarification question for each new feature or task until **zero assumptions remain** |
-| **Planner** | Task Planner | task decomposition, dependency analysis, sequencing, risk assessment, acceptance criteria | \`.agents-team/shared/**\` (write) | Designs the full execution plan once all clarifications are resolved |
-| **Reviewer** | Feature Reviewer | code review, acceptance criteria validation, quality assurance, refactoring guidance | \`**/*\` (read) | Reviews every feature implementation, identifies issues, and ensures responsible agents fix all problems before sign-off |
+| Agent Name | Role | Expertise | Boundaries | Template | Purpose |
+|---|---|---|---|---|---|
+| **Clarifier** | Requirements Analyst | requirements elicitation, assumption detection, user interviews, scope definition | \`.agents-team/shared/**\` (write) | \`generic/clarifier\` | Asks every necessary clarification question for each new feature or task until **zero assumptions remain** |
+| **Planner** | Task Planner | task decomposition, dependency analysis, sequencing, risk assessment, acceptance criteria | \`.agents-team/shared/**\` (write) | \`generic/planner\` | Designs the full execution plan once all clarifications are resolved |
+| **Reviewer** | Feature Reviewer | code review, acceptance criteria validation, quality assurance, refactoring guidance | \`**/*\` (read) | \`generic/reviewer\` | Reviews every feature implementation, identifies issues, and ensures responsible agents fix all problems before sign-off |
+| **TestEngineer** | C# Test Developer | MSTest v3, NSubstitute v5, FluentAssertions, integration testing, WebApplicationFactory, code coverage | \`**/*.Tests/**\` (write), \`**/*.IntegrationTests/**\` (write), \`**/Tests/**\` (write), \`src/**/*.cs\` (read) | \`generic/test-dev\` | Writes and maintains unit tests, integration tests, and smoke tests for every feature — ensures test coverage for all code changes |
 
-These three agents are **mandatory and non-negotiable**. They MUST appear in every proposal table. If the user does not want one of them, they must explicitly reject it — and the rejection must be confirmed before you remove it from the proposal.
+These four agents are **mandatory and non-negotiable**. They MUST appear in every proposal table. If the user does not want one of them, they must explicitly reject it — and the rejection must be confirmed before you remove it from the proposal.
+
+**Creating the TestEngineer:** Always use the template: \`ll-agents-team add --name "TestEngineer" --template generic/test-dev\`. The template contains full testing conventions, code standards, and working protocol. Do NOT create this agent with inline \`--role\`/\`--expertise\` flags — the template is significantly richer.
 
 **Present your proposal:**
 
